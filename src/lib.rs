@@ -3,6 +3,79 @@ use rand::Rng;
 use std::panic;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
+use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
+
+pub enum TileType {
+    Air,
+    Soil,
+    Sand,
+    Stone,
+    Worker,
+    Queen,
+    Egg,
+    Corpse,
+    Plant,
+    Water,
+    Fungus,
+    Pest,
+    Trail,
+}
+
+// Each chunk is essentially a hashmap from TileType to its count.
+pub type Chunk = HashMap<TileType, i32>;
+
+trait ChunkExt {
+    fn increment(&mut self, tile: &TileType);
+}
+
+impl ChunkExt for Chunk {
+    fn increment(&mut self, tile: &TileType) {
+        let counter = self.entry(*tile).or_insert(0);
+        *counter += 1;
+    }
+}
+
+impl TileType {
+    pub fn to_color(&self) -> &'static str {
+        match self {
+            TileType::Air => "skyblue",
+            TileType::Soil => "peru",
+            TileType::Sand => "sandybrown",
+            TileType::Stone => "slategray",
+            TileType::Worker => "red",
+            TileType::Queen => "blueviolet",
+            TileType::Egg => "white",
+            TileType::Corpse => "black",
+            TileType::Plant => "olivedrab",
+            TileType::Water => "blue",
+            TileType::Fungus => "teal",
+            TileType::Pest => "fuchsia",
+            TileType::Trail => "yellow",
+        }
+    }
+
+    pub fn from_str(tile_str: &str) -> Result<Self, String> {
+        match tile_str {
+            "Air" => Ok(TileType::Air),
+            "Soil" => Ok(TileType::Soil),
+            "Sand" => Ok(TileType::Sand),
+            "Stone" => Ok(TileType::Stone),
+            "Worker" => Ok(TileType::Worker),
+            "Queen" => Ok(TileType::Queen),
+            "Egg" => Ok(TileType::Egg),
+            "Corpse" => Ok(TileType::Corpse),
+            "Plant" => Ok(TileType::Plant),
+            "Water" => Ok(TileType::Water),
+            "Fungus" => Ok(TileType::Fungus),
+            "Pest" => Ok(TileType::Pest),
+            "Trail" => Ok(TileType::Trail),
+            _ => Err(format!("Unknown tile type: {}", tile_str)),
+        }
+    }
+}
 
 #[wasm_bindgen]
 pub struct World {
@@ -11,16 +84,48 @@ pub struct World {
     age: i32,
     ants: i32,
     tiles: Vec<Vec<String>>,
+    chunks: Vec<Vec<Chunk>>,
+    chunk_size: i32,
+    tileset: Vec<TileType>,
 }
 
 #[wasm_bindgen]
 impl World {
     // constructor
     #[wasm_bindgen(constructor)]
-    pub fn constructor(rows: i32, cols: i32, age: i32, ants: i32) -> Self {
+    pub fn constructor(rows: i32, cols: i32, age: i32, ants: i32, chunk_size: i32, js_tileset: JsValue) -> Self {
         panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        let tiles = vec![vec![String::from(""); cols as usize]; rows as usize];
+        // Parse js_tileset into a Vec<TileType>
+        let tileset_array: Vec<String> = serde_wasm_bindgen::from_value(js_tileset).unwrap();
+
+        let chunks = vec![vec![Chunk::new(); cols as usize]; rows as usize];
+
+        let tileset = tileset_array.iter().map(|tile_str| {
+            // Convert each JsValue into a Rust String
+            let tile_string: String = tile_str.to_string();
+
+            // Convert the Rust String into the appropriate TileType
+            match tile_string.as_str() {
+                "skyblue" => TileType::Air,
+                "peru" => TileType::Soil,
+                "sandybrown" => TileType::Sand,
+                "slategray" => TileType::Stone,
+                "red" => TileType::Worker,
+                "blueviolet" => TileType::Queen,
+                "white" => TileType::Egg,
+                "black" => TileType::Corpse,
+                "olivedrab" => TileType::Plant,
+                "blue" => TileType::Water,
+                "teal" => TileType::Fungus,
+                "fuchsia" => TileType::Pest,
+                "yellow" => TileType::Trail,
+                _ => panic!("Unknown tile type!"),
+            }
+        }).collect::<Vec<TileType>>();
+
+        let tiles = vec![vec![TileType::Air.to_color().to_string(); cols as usize]; rows as usize];
+
         console::log_1(&format!("WASM World constructor fired").into());
         World {
             rows,
@@ -28,6 +133,9 @@ impl World {
             age,
             ants,
             tiles,
+            chunk_size,
+            tileset,
+            chunks,
         }
     }
 
@@ -141,7 +249,68 @@ impl World {
         }
     }
 
+    pub fn get_chunks(&self, x: i32, y: i32, distance: i32) -> Result<String, JsValue> {
+        // defined in definitions.js, temporarily hardcoded TODO
+        let cx_min = ((x - distance) / &self.chunk_size).max(0);
+        let cy_min = ((y - distance) / &self.chunk_size).max(0);
+        let cx_max = ((x + distance) / &self.chunk_size).min(self.chunks[0].len() as i32 - 1);
+        let cy_max = ((y + distance) / &self.chunk_size).min(self.chunks.len() as i32 - 1);
+
+        let mut matches = Vec::new();
+        for cx in cx_min..=cx_max {
+            for cy in cy_min..=cy_max {
+                matches.push(self.chunks[cy as usize][cx as usize].clone());
+            }
+        }
+        serde_json::to_string(&matches).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     // functions
+    pub fn update_chunks(&mut self) -> Result<(), String> {
+        self.chunks.clear();
+
+        for cy in 0..(self.rows / self.chunk_size) {
+            let mut row = Vec::new();
+
+            for cx in 0..(self.cols / self.chunk_size) {
+                let mut blank_chunk = Chunk::default();
+                
+                let cy0 = cy * self.chunk_size;
+                let cx0 = cx * self.chunk_size;
+
+                self.for_each_tile(cx0, cy0, cx0 + self.chunk_size, cy0 + self.chunk_size, |x, y| {
+                    if let Ok(tile_str) = self.get_tile(x, y) {
+                        match TileType::from_str(&tile_str) {
+                            Ok(tile) => {
+                                blank_chunk.increment(&tile);
+                            },
+                            Err(_) => {
+                                // Handle the error or skip the tile, based on your requirements.
+                                // If you want to propagate this error, you might need to change the signature
+                                // and structure of your update_chunks function to propagate it.
+                            }
+                        }
+                    }
+                });
+
+                row.push(blank_chunk);
+            }
+            
+            self.chunks.push(row);
+        }
+        Ok(())
+    }
+
+    fn for_each_tile<F: FnMut(i32, i32)>(&self, x0: i32, y0: i32, x1: i32, y1: i32, mut func: F) {
+        for y in y0..y1 {
+            for x in x0..x1 {
+                if self.legal(x, y) {
+                    func(x, y);
+                }
+            }
+        }
+    }
+
     pub fn do_rain(&mut self, count: f64, tile: Option<String>) {
         let tile = tile.unwrap_or("WATER".to_string());
         

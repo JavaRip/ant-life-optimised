@@ -10,7 +10,8 @@ class World {
   constructor(rows = ROW_COUNT, cols = COL_COUNT, generatorSettings = {}) {
     const age = 0;
     const ants = 0;
-    this.wasmWorld = new WASM.World(rows, cols, age, ants);
+    const wasmTilset = Object.values(TILESET);
+    this.wasmWorld = new WASM.World(rows, cols, age, ants, CHUNK_SIZE, wasmTilset);
     this._legal = this.wasmWorld.legal.bind(this.wasmWorld);
     this.setRows = this.wasmWorld.set_rows.bind(this.wasmWorld);
     this.getRows = this.wasmWorld.get_rows.bind(this.wasmWorld);
@@ -26,6 +27,8 @@ class World {
     this.checkTile = this.wasmWorld.check_tile.bind(this.wasmWorld);
     this.setTile = this.wasmWorld.set_tile.bind(this.wasmWorld);
     this.doRain = this.wasmWorld.do_rain.bind(this.wasmWorld);
+    this._getChunks = this.wasmWorld.get_chunks.bind(this.wasmWorld);
+    this._updateChunks = this.wasmWorld.update_chunks.bind(this.wasmWorld);
     this.rows = rows;
     this.cols = cols;
     this.age = 0;
@@ -35,6 +38,67 @@ class World {
     this.worldlogic = new Worldlogic(this);
     this.worldgen.generate(generatorSettings);
   }
+
+  // /**
+  //  * Builds a list of chunks and their tile counts
+  //  */
+  // _updateChunks() {
+  //   const me = this;
+  //   this.chunks = [];
+
+  //   for (let cy = 0; cy < this.rows / CHUNK_SIZE; cy++) {
+  //     this.chunks.push([]);
+  //     for (let cx = 0; cx < this.cols / CHUNK_SIZE; cx++) {
+  //       // Create chunk with zeroed counts for all tile types
+  //       let blankChunk = {};
+  //       for (let tile of Object.keys(TILESET)) {
+  //         blankChunk[tile] = 0;
+  //       }
+  //       this.chunks[cy].push(blankChunk);
+
+  //       // Count tiles in chunk
+  //       const cy0 = cy * CHUNK_SIZE;
+  //       const cx0 = cx * CHUNK_SIZE;
+  //       this.forEachTile(
+  //         cx0,
+  //         cy0,
+  //         cx0 + CHUNK_SIZE,
+  //         cy0 + CHUNK_SIZE,
+  //         function (x, y) {
+  //           me.chunks[cy][cx][me.getTile(x, y)]++;
+  //         },
+  //       );
+  //     }
+  //   }
+  // }
+
+  // /**
+  //  * Returns chunks within a given distance of a tile
+  //  * @param {number} x - x coordinate
+  //  * @param {number} y - y coordinate
+  //  * @param {number} distance - distance from tile to check
+  //  * @returns {object[]} - chunks within distance of tile
+  //  */
+  // _getChunks(x, y, distance) {
+  //   const cxMin = Math.max(0, Math.floor((x - distance) / CHUNK_SIZE));
+  //   const cyMin = Math.max(0, Math.floor((y - distance) / CHUNK_SIZE));
+  //   const cxMax = Math.min(
+  //     this.chunks[0].length - 1,
+  //     Math.floor((x + distance) / CHUNK_SIZE),
+  //   );
+  //   const cyMax = Math.min(
+  //     this.chunks.length - 1,
+  //     Math.floor((y + distance) / CHUNK_SIZE),
+  //   );
+
+  //   let matches = [];
+  //   for (let cx = cxMin; cx <= cxMax; cx++) {
+  //     for (let cy = cyMin; cy <= cyMax; cy++) {
+  //       matches.push(this.chunks[cy][cx]);
+  //     }
+  //   }
+  //   return matches;
+  // }
 
   /**
    * Run the simulation for a single step
@@ -77,67 +141,6 @@ class World {
       }
     }
     return false;
-  }
-
-  /**
-   * Returns chunks within a given distance of a tile
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {number} distance - distance from tile to check
-   * @returns {object[]} - chunks within distance of tile
-   */
-  _getChunks(x, y, distance) {
-    const cxMin = Math.max(0, Math.floor((x - distance) / CHUNK_SIZE));
-    const cyMin = Math.max(0, Math.floor((y - distance) / CHUNK_SIZE));
-    const cxMax = Math.min(
-      this.chunks[0].length - 1,
-      Math.floor((x + distance) / CHUNK_SIZE),
-    );
-    const cyMax = Math.min(
-      this.chunks.length - 1,
-      Math.floor((y + distance) / CHUNK_SIZE),
-    );
-
-    let matches = [];
-    for (let cx = cxMin; cx <= cxMax; cx++) {
-      for (let cy = cyMin; cy <= cyMax; cy++) {
-        matches.push(this.chunks[cy][cx]);
-      }
-    }
-    return matches;
-  }
-
-  /**
-   * Builds a list of chunks and their tile counts
-   */
-  _updateChunks() {
-    const me = this;
-    this.chunks = [];
-
-    for (let cy = 0; cy < this.rows / CHUNK_SIZE; cy++) {
-      this.chunks.push([]);
-      for (let cx = 0; cx < this.cols / CHUNK_SIZE; cx++) {
-        // Create chunk with zeroed counts for all tile types
-        let blankChunk = {};
-        for (let tile of Object.keys(TILESET)) {
-          blankChunk[tile] = 0;
-        }
-        this.chunks[cy].push(blankChunk);
-
-        // Count tiles in chunk
-        const cy0 = cy * CHUNK_SIZE;
-        const cx0 = cx * CHUNK_SIZE;
-        this.forEachTile(
-          cx0,
-          cy0,
-          cx0 + CHUNK_SIZE,
-          cy0 + CHUNK_SIZE,
-          function (x, y) {
-            me.chunks[cy][cx][me.getTile(x, y)]++;
-          },
-        );
-      }
-    }
   }
 
   /**
