@@ -87,13 +87,32 @@ pub struct World {
     chunks: Vec<Vec<Chunk>>,
     chunk_size: i32,
     tileset: Vec<TileType>,
+    rain_freq: i32,
+    rain_time: i32,
+    pest_freq: i32,
+    pest_start: i32
+}
+
+extern "C" {
+    fn worldlogic_tick(); // The JS function you want to call
 }
 
 #[wasm_bindgen]
 impl World {
     // constructor
     #[wasm_bindgen(constructor)]
-    pub fn constructor(rows: i32, cols: i32, age: i32, ants: i32, chunk_size: i32, js_tileset: JsValue) -> Self {
+    pub fn constructor(
+        rows: i32, 
+        cols: i32, 
+        age: i32,
+        ants: i32, 
+        chunk_size: i32, 
+        js_tileset: JsValue, 
+        rain_freq: i32, 
+        rain_time: i32, 
+        pest_freq: i32, 
+        pest_start: i32
+    ) -> Self {
         panic::set_hook(Box::new(console_error_panic_hook::hook));
 
         // Parse js_tileset into a Vec<TileType>
@@ -136,6 +155,10 @@ impl World {
             chunk_size,
             tileset,
             chunks,
+            rain_freq,
+            rain_time,
+            pest_freq,
+            pest_start,
         }
     }
 
@@ -266,6 +289,30 @@ impl World {
     }
 
     // functions
+    pub fn tick(&mut self) {
+        self.update_chunks();
+
+        // Tile actions
+        worldlogic_tick();
+
+        // Rain
+        if self.age >= self.rain_freq && self.age % self.rain_freq <= self.rain_time {
+            let max_rain = rand::thread_rng().gen_range(0..=5) as f64;
+            let rain_progress = (self.age % self.rain_freq) as f64;
+            let rain_count = (
+                (rain_progress.powf(1.0) / 10000.0).min(max_rain).min(
+                    (self.rain_time as f64 - rain_progress).powf(1.0) / 10000.0
+                )
+                * self.cols as f64
+            ) / 99.0;
+            self.do_rain(rain_count as f64, None);  
+        }
+        // Pests (never at the same time as rain)
+        else if self.age >= self.pest_start && self.age % self.pest_freq == -1 {
+            self.do_rain(rand::random(), Some("PEST".to_string()));  // Assuming `do_rain` takes a f64 and &str
+        }
+    }
+
     pub fn update_chunks(&mut self) -> Result<(), String> {
         self.chunks.clear();
 
