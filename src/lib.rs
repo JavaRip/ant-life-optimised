@@ -6,8 +6,22 @@ use web_sys::console;
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
 
+// Each chunk is essentially a hashmap from TileType to its count.
+pub type Chunk = HashMap<TileType, i32>;
+
+trait ChunkExt {
+    fn increment(&mut self, tile: &TileType);
+}
+
+impl ChunkExt for Chunk {
+    fn increment(&mut self, tile: &TileType) {
+        let counter = self.entry(*tile).or_insert(0);
+        *counter += 1;
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TileType {
     Air,
     Soil,
@@ -22,20 +36,6 @@ pub enum TileType {
     Fungus,
     Pest,
     Trail,
-}
-
-// Each chunk is essentially a hashmap from TileType to its count.
-pub type Chunk = HashMap<TileType, i32>;
-
-trait ChunkExt {
-    fn increment(&mut self, tile: &TileType);
-}
-
-impl ChunkExt for Chunk {
-    fn increment(&mut self, tile: &TileType) {
-        let counter = self.entry(*tile).or_insert(0);
-        *counter += 1;
-    }
 }
 
 impl TileType {
@@ -90,11 +90,11 @@ pub struct World {
     rain_freq: i32,
     rain_time: i32,
     pest_freq: i32,
-    pest_start: i32
-}
-
-extern "C" {
-    fn worldlogic_tick(); // The JS function you want to call
+    pest_start: i32,
+    world_age: i32,
+    convert_prob: f32,
+    kill_prob: i32,
+    evaporate_prob: i32,
 }
 
 #[wasm_bindgen]
@@ -111,7 +111,10 @@ impl World {
         rain_freq: i32, 
         rain_time: i32, 
         pest_freq: i32, 
-        pest_start: i32
+        pest_start: i32,
+        convert_prob: f32,
+        kill_prob: i32,
+        evaporate_prob: i32,
     ) -> Self {
         panic::set_hook(Box::new(console_error_panic_hook::hook));
 
@@ -144,6 +147,7 @@ impl World {
         }).collect::<Vec<TileType>>();
 
         let tiles = vec![vec![TileType::Air.to_color().to_string(); cols as usize]; rows as usize];
+        let world_age = 0;
 
         console::log_1(&format!("WASM World constructor fired").into());
         World {
@@ -159,6 +163,10 @@ impl World {
             rain_time,
             pest_freq,
             pest_start,
+            world_age, 
+            convert_prob,
+            kill_prob,
+            evaporate_prob,
         }
     }
 
@@ -272,8 +280,7 @@ impl World {
         }
     }
 
-    pub fn get_chunks(&self, x: i32, y: i32, distance: i32) -> Result<String, JsValue> {
-        // defined in definitions.js, temporarily hardcoded TODO
+    fn get_chunks(&self, x: i32, y: i32, distance: i32) -> Vec<Chunk> {
         let cx_min = ((x - distance) / &self.chunk_size).max(0);
         let cy_min = ((y - distance) / &self.chunk_size).max(0);
         let cx_max = ((x + distance) / &self.chunk_size).min(self.chunks[0].len() as i32 - 1);
@@ -285,15 +292,222 @@ impl World {
                 matches.push(self.chunks[cy as usize][cx as usize].clone());
             }
         }
-        serde_json::to_string(&matches).map_err(|e| JsValue::from_str(&e.to_string()))
+        matches
     }
 
+
     // functions
+    fn swap_tiles(&mut self, x: i32, y: i32, a: i32, b: i32, mask: Option<String>) -> bool {
+        if !self.check_tile(a, b, mask.clone()) {
+            return false;
+        } else {
+            let t1 = self.get_tile(x, y).unwrap(); // TODO fix unwrap
+            let t2 = self.get_tile(a, b).unwrap();
+            if !self.set_tile(a, b, &t1, mask.clone()) {
+                return false; // Added this check in case setting the tile failed
+            }
+            if !self.set_tile(x, y, &t2, mask) {
+                return false; // Similarly, added this check too
+            }
+            true
+        }
+    }
+
+    fn random_sign() -> i32 {
+        let mut rng = rand::thread_rng();
+        if rng.gen::<bool>() {
+            1
+        } else {
+            -1
+        }
+    }
+
+    fn touching(&self, x: i32, y: i32, mask: &Vec<&str>, radius: i32) -> usize {
+        self.touching_which(x, y, mask, radius).len()
+    }
+
+    fn touching_which(&self, x: i32, y: i32, mask: &Vec<&str>, radius: i32) -> Vec<(i32, i32)> {
+        // Serialize mask to JSON-like string (assuming the check_tile function uses this format).
+        let mask_str = format!("{:?}", mask);
+
+        // If no chunks in range contain target, skip searching
+        let threshold = if self.check_tile(x, y, Some(mask_str.to_string())) { 2 } else { 1 };
+        if !self.check_chunks(x, y, Some(mask), radius, threshold) {
+            return vec![];
+        }
+
+        let mut touching = vec![];
+        for a in (x - radius)..=(x + radius) {
+            for b in (y - radius)..=(y + radius) {
+                if a != x || b != y {
+                    if self.check_tile(a, b, Some(mask_str.to_string())) {
+                        touching.push((a, b));
+                    }
+                }
+            }
+        }
+        touching
+    }
+
+    fn check_chunks(&self, x: i32, y: i32, mask: Option<&Vec<&str>>, distance: i32, threshold: i32) -> bool {
+        if !self.legal(x, y) {
+            return false;
+        }
+        if mask.is_none() {
+            return true;
+        }
+        if threshold == 0 {
+            return true;
+        }
+        
+        let chunks = self.get_chunks(x, y, distance);
+        let mut total = 0;
+        
+        for chunk in &chunks {
+            if let Some(mask_ref) = &mask {
+                for tile in mask_ref.iter() {
+                    if let Ok(tile_type) = TileType::from_str(tile) {
+                        total += chunk.get(&tile_type).unwrap_or(&0i32).clone();
+                        if total > threshold {
+                            return true;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+            }
+        }
+        
+        false
+    }
+
+
+    fn sand_action(&mut self, x: i32, y: i32) -> bool { 
+        let bias = Self::random_sign();
+        
+        let mask = Some("AIR,WATER".to_string());
+
+        self.swap_tiles(x, y, x, y - 1, mask.clone()) ||
+        self.swap_tiles(x, y, x + bias, y - 1, mask.clone()) ||
+        self.swap_tiles(x, y, x - bias, y - 1, mask.clone())
+    }
+
+    fn corpse_action(&mut self, x: i32, y: i32) -> bool {
+        // When touching plant, convert to plant
+        if rand::random::<f32>() <= self.convert_prob * (self.touching(x, y, &vec!["PLANT"], 1) as f32) {
+            self.set_tile(x, y, "PLANT", None);
+            return true;
+        }
+
+        // Move down or diagonally down
+        let bias = Self::random_sign();
+        self.swap_tiles(x, y, x, y - 1, Some("AIR".to_string())) ||
+        self.swap_tiles(x, y, x - bias, y - 1, Some("AIR".to_string())) ||
+        self.swap_tiles(x, y, x + bias, y - 1, Some("AIR".to_string()))
+    }
+
+    fn water_action(&mut self, x: i32, y: i32) {
+        // chance to kill neighbouring creatures
+        if rand::random::<f64>() <= self.kill_prob && self.set_one_touching(x, y, "CORPSE", water_kill_mask) {
+            return self.world.set_tile(x, y, "AIR");
+        }
+
+        // chance to evaporate under sky or if air to left/right or near plant
+        if rand::random::<f64>() <= self.evaporate_prob &&
+           (self.exposed_to_sky(x, y) ||
+            self.check_tile(x - 1, y, "AIR") ||
+            self.check_tile(x + 1, y, "AIR") ||
+            self.touching(x, y, "PLANT", 1)) {
+
+            return self.world.set_tile(x, y, "AIR");
+        }
+
+        // move down or diagonally down or sideways
+        let bias = World::random_sign();
+        return self.swap_tiles(x, y, x, y - 1, "AIR","CORPSE") ||
+               self.swap_tiles(x, y, x + bias, y - 1, "AIR","CORPSE") ||
+               self.swap_tiles(x, y, x - bias, y - 1, "AIR","CORPSE") ||
+               self.swap_tiles(x, y, x + bias, y, "AIR","CORPSE");
+    }
+
+    fn plant_action(&mut self, x: i32, y: i32) -> bool {
+        println!("plant_action");
+        true
+    }
+
+    fn fungus_action(&mut self, x: i32, y: i32) -> bool {
+        println!("fungus_action");
+        true
+    }
+
+    fn queen_action(&mut self, x: i32, y: i32) -> bool {
+        println!("queen_action");
+        true
+    }
+
+    fn worker_action(&mut self, x: i32, y: i32) -> bool {
+        println!("worker_action");
+        true
+    }
+
+    fn pest_action(&mut self, x: i32, y: i32) -> bool {
+        println!("pest_action");
+        true
+    }
+
+    fn egg_action(&mut self, x: i32, y: i32) -> bool {
+        println!("egg_action");
+        true
+    }
+
+    fn trail_action(&mut self, x: i32, y: i32) -> bool {
+        println!("trail_action");
+        true
+    }
+
+    fn do_tile_action(&mut self, x: i32, y: i32) -> bool {
+        println!("do_tile_action");
+        // Define actions as a hashmap of String and function
+        let mut actions: HashMap<String, Box<dyn Fn(&mut Self, i32, i32) -> bool>> = HashMap::new();
+
+        actions.insert("sand".to_string(), Box::new(World::sand_action));
+        actions.insert("corpse".to_string(), Box::new(World::corpse_action));
+        actions.insert("water".to_string(), Box::new(World::water_action));
+        actions.insert("plant".to_string(), Box::new(World::plant_action));
+        actions.insert("fungus".to_string(), Box::new(World::fungus_action));
+        actions.insert("queen".to_string(), Box::new(World::queen_action));
+        actions.insert("worker".to_string(), Box::new(World::worker_action));
+        actions.insert("pest".to_string(), Box::new(World::pest_action));
+        actions.insert("egg".to_string(), Box::new(World::egg_action));
+        actions.insert("trail".to_string(), Box::new(World::trail_action));
+
+        let tile = self.get_tile(x, y).unwrap(); // TODO remove unwrap
+
+        if let Some(action) = actions.get(&tile) {
+            action(self, x, y); // Call the closure, passing self and the coordinates
+            true
+        } else {
+            false
+        }
+    }
+
+    fn worldlogic_tick(&mut self) {
+        self.world_age += 1; // TODO setter function maybe better?
+        let bias = rand::thread_rng().gen_bool(0.5);
+
+        for y in 0..self.rows {
+            for x in 0..self.cols {
+                let dx = if bias { x } else { self.cols - 1 - x };
+                self.do_tile_action(dx, y);
+            }
+        }
+    }
+
     pub fn tick(&mut self) {
         self.update_chunks();
 
         // Tile actions
-        worldlogic_tick();
+        self.worldlogic_tick();
 
         // Rain
         if self.age >= self.rain_freq && self.age % self.rain_freq <= self.rain_time {

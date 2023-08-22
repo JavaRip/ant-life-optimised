@@ -1,3 +1,5 @@
+const { KILL_PROB, EVAPORATE_PROB } = require("./definitions");
+
 /**
  * Contains the world state and methods for updating it
  * Tile logic is handled by Worldlogic
@@ -21,7 +23,10 @@ class World {
       RAIN_FREQ, 
       RAIN_TIME, 
       PEST_FREQ, 
-      PEST_START
+      PEST_START,
+      CONVERT_PROB,
+      KILL_PROB,
+      EVAPORATE_PROB,
     );
     this._legal = this.wasmWorld.legal.bind(this.wasmWorld);
     this.setRows = this.wasmWorld.set_rows.bind(this.wasmWorld);
