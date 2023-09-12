@@ -9,9 +9,10 @@ let BRUSH_MASK = "AIR";
 let BRUSH_X;
 let BRUSH_Y;
 let LAST_ANT_COUNT = 1;
+let WASM;
 
-$(document).ready(function () {
-  init();
+$(document).ready(async function () {
+  await init();
   setupControls();
   if (!START_PAUSED) {
     $("#btn-pause").trigger("click");
@@ -64,8 +65,8 @@ function setupControls() {
     step();
   });
 
-  $("#btn-reset").on("click", function () {
-    init();
+  $("#btn-reset").on("click", async function () {
+    await init();
     if (START_PAUSED && FRAME_TIMER) {
       cancelAnimationFrame(FRAME_TIMER);
       FRAME_TIMER = null;
@@ -103,11 +104,15 @@ function _setBrushMask() {
   }
 }
 
-function init() {
+async function init() {
+  WASM = await import("../pkg/ant_life_optimised.js");
+  await WASM.default();
+  const wasmWorld = new WASM.World(10, 10);
+  console.log(wasmWorld.get_rows());
+
   if (DEBUG) console.log("Loading...");
   $("#score").text("");
 
-  // WASM entrypoint
   WORLD = new World(); 
 
   // here renderer has constant access to world, when world is in wasm

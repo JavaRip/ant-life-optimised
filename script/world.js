@@ -124,7 +124,6 @@ class World {
         );
       }
     }
-    console.log(this.chunks);
   }
 
   swapTiles(x, y, a, b, mask = false) {
