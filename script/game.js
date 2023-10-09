@@ -10,8 +10,8 @@ let BRUSH_X;
 let BRUSH_Y;
 let LAST_ANT_COUNT = 1;
 
-$(document).ready(async function () {
-  await init();
+$(document).ready(function () {
+  init();
   setupControls();
   if (!START_PAUSED) {
     $("#btn-pause").trigger("click");
@@ -41,7 +41,7 @@ function pause() {
  */
 function play() {
   $("#btn-pause").text("Pause");
-  gameLoop();
+  gameLoop(true);
 }
 
 /**
@@ -116,26 +116,27 @@ function _setBrushMask() {
   }
 }
 
-async function init() {
+function init() {
   if (DEBUG) console.log("Loading...");
   $("#score").text("");
-
-  // init wasm and make wasm object global
-  window.WASM = await import("../pkg/ant_life_optimised.js");
-  await WASM.default(); // default function is wasm init
-
-  // start world
   WORLD = new World();
-  RENDERER = new Renderer(document.getElementById("map"), WORLD, TILESET);
+  WORLDGENERATOR = new Worldgen();
+  WORLD = WORLDGENERATOR.generate({}, WORLD);
+  RENDERER = new Renderer(
+    document.getElementById("map"),
+    WORLD,
+    TILESET
+  );
   RENDERER.draw();
   prompt(`
     Spring has arrived and plants are sprouting <br/>
-    Guide your queen (purple) to fungus (teal) to begin your new colony
+    Guide your queen (purple) to fungus (teal) to begin your new colony1G
   `);
   if (DEBUG) console.log(WORLD);
 }
 
 function gameLoop(loop = true) {
+  console.log('we made it')
   const start = performance.now();
 
   // world tick rate can be <= frame rate
@@ -154,7 +155,7 @@ function gameLoop(loop = true) {
 
   if (LAST_ANT_COUNT === 1 && WORLD.ants > 1) {
     prompt(`
-      The first workers (red) have begun to hatch from eggs (white) <br/> 
+      The first workers (red) have begun to hatch from eggs (white) <br/>
       Grow more fungus (teal) by bringing it plant material (green)
     `);
   }

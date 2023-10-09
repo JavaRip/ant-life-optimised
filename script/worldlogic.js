@@ -1,16 +1,12 @@
-/**
- * Tile logic for the world
- * @param {World} world - The world state object to operate on
- */
 class Worldlogic {
-  constructor(world) {
-    this.world = world;
-  }
 
   /**
-   * Runs the simulation for a single step
+   * Run the simulation for a single step
    */
   tick() {
+    this._updateChunks();
+
+    // Tile actions
     this.world.age += 1;
 
     // Randomly alternate left-to-right and right-to-left to avoid turn-order bias
@@ -21,6 +17,24 @@ class Worldlogic {
         const dx = bias ? x : this.world.cols - 1 - x;
         this._doTileAction(dx, y);
       }
+    }
+
+    // Rain
+    if (this.age >= RAIN_FREQ && this.age % RAIN_FREQ <= RAIN_TIME) {
+      const maxRain = randomIntInclusive(1, 5);
+      const rainProgress = this.age % RAIN_FREQ;
+      const rainCount =
+        (Math.min(
+          rainProgress ** 2 / 10000,
+          maxRain,
+          (RAIN_TIME - rainProgress) ** 2 / 10000,
+        ) *
+          this.cols) /
+        100;
+      this.doRain(rainCount);
+    } // Pests (never at same time as rain)
+    else if (this.age >= PEST_START && this.age % PEST_FREQ === 0) {
+      this.doRain(Math.random(), "PEST");
     }
   }
 
@@ -106,11 +120,10 @@ class Worldlogic {
     if (
       Math.random() <= EVAPORATE_PROB &&
       (this._exposedToSky(x, y) ||
-        this.world.checkTile(x - 1, y, JSON.stringify(["AIR"])) ||
-        this.world.checkTile(x + 1, y, JSON.stringify(["AIR"])) ||
+        this.world.checkTile(x - 1, y, ["AIR"]) ||
+        this.world.checkTile(x + 1, y, ["AIR"]) ||
         this._touching(x, y, ["PLANT"]))
     ) {
-
       return this.world.setTile(x, y, "AIR");
     }
 
@@ -132,7 +145,7 @@ class Worldlogic {
   _plantAction(x, y) {
     // when unsupported, move down
     if (
-      this.world.checkTile(x, y - 1, JSON.stringify(["AIR", "WATER"])) &&
+      this.world.checkTile(x, y - 1, ["AIR", "WATER"]) &&
       this._touching(x, y, ["PLANT"]) < 2
     ) {
       return this.world.swapTiles(x, y, x, y - 1);
@@ -166,7 +179,7 @@ class Worldlogic {
 
     // when unsupported, move down
     if (
-      this.world.checkTile(x, y - 1, JSON.stringify(["AIR", "WATER"])) &&
+      this.world.checkTile(x, y - 1, ["AIR", "WATER"]) &&
       this._touching(x, y, ["FUNGUS", "PLANT"]) < 2
     ) {
       return this.world.swapTiles(x, y, x, y - 1);
@@ -340,7 +353,7 @@ class Worldlogic {
    */
   _climbable(x, y) {
     return (
-      !this.world.checkTile(x, y - 1, JSON.stringify(["AIR", "TRAIL"])) ||
+      !this.world.checkTile(x, y - 1, ["AIR", "TRAIL"]) ||
       this._touching(x, y, CLIMB_MASK) > 0
     );
   }
@@ -360,9 +373,9 @@ class Worldlogic {
     const dy = randomIntInclusive(-1, 1);
 
     // when moving into a pushable tile, swap the two tiles in front
-    if (pushMask && this.world.checkTile(x + dx, y + dy, JSON.stringify(pushMask))) {
+    if (pushMask && this.world.checkTile(x + dx, y + dy, pushMask)) {
       // push less vertically than horizontally
-      this.world.swapTiles(x + dx, y + dy, x + dx + dx, y + dy, JSON.stringify(mask));
+      this.world.swapTiles(x + dx, y + dy, x + dx + dx, y + dy, mask);
     }
 
     // swap with tile in front
@@ -404,7 +417,7 @@ class Worldlogic {
    */
   _touchingWhich(x, y, mask, radius = 1) {
     // If no chunks in range contain target, skip searching
-    const threshold = this.world.checkTile(x, y, JSON.stringified(mask)) ? 2 : 1;
+    const threshold = this.world.checkTile(x, y, mask) ? 2 : 1;
     if (!this.world.checkChunks(x, y, mask, radius, threshold)) return [];
 
     const world = this.world;
@@ -415,7 +428,7 @@ class Worldlogic {
       x + radius,
       y + radius,
       function (a, b) {
-        if (world.checkTile(a, b, JSON.stringify(mask)) && (a !== x || b !== y))
+        if (world.checkTile(a, b, mask) && (a !== x || b !== y))
           touching.push({ a, b });
       },
     );
@@ -461,7 +474,7 @@ class Worldlogic {
           const a = x + dx;
           const b = y + dy;
 
-          if (this.world.checkTile(a, b, JSON.stringify(targetMask))) {
+          if (this.world.checkTile(a, b, targetMask)) {
             // found
             const desiredX = x + Math.sign(dx);
             const desiredY = y + Math.sign(dy);
@@ -481,8 +494,4 @@ class Worldlogic {
     // none reachable found in radius
     return false;
   }
-}
-
-if (typeof module === 'object') {
-  module.exports = { Worldlogic };
 }
