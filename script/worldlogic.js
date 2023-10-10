@@ -268,7 +268,7 @@ class Worldlogic {
     }
 
     // move randomly
-    return this._moveRandom(x, y, WALK_MASK, PUSH_MASK);
+    return this._moveRandom(world, x, y, WALK_MASK, PUSH_MASK);
   }
 
   /**
@@ -296,13 +296,13 @@ class Worldlogic {
     // Note: low chance allows going around obstacles and also reduces lag
     if (
       Math.random() < PEST_SEEK_PROB &&
-      this._searchForTile(x, y, PEST_TARGET_MASK, PEST_RANGE, WALK_MASK)
+      this._searchForTile(world, x, y, PEST_TARGET_MASK, PEST_RANGE, WALK_MASK)
     ) {
       return true;
     }
     // move randomly
     // Note: random movement uses a reduced tileset to avoid helping farm
-    return this._moveRandom(x, y, ROAM_MASK);
+    return this._moveRandom(world, x, y, ROAM_MASK);
   }
 
   /**

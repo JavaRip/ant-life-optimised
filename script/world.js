@@ -12,10 +12,9 @@ class World {
     this.cols = cols;
     this.age = 0;
     this.ants = 1;
-    // this.generatorSettings = generatorSettings;
-    // this.worldgen = new Worldgen(this);
-    // this.worldlogic = new Worldlogic(this);
-    // this.worldgen.generate(generatorSettings);
+    this.surfaceY = 80;
+    this.tiles = [];
+    this.chunks = [];
   }
 
   /**
