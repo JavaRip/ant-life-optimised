@@ -128,39 +128,6 @@ class World {
   }
 
   /**
-   * Builds a list of chunks and their tile counts
-   */
-  _updateChunks() {
-    const me = this;
-    this.chunks = [];
-
-    for (let cy = 0; cy < this.rows / CHUNK_SIZE; cy++) {
-      this.chunks.push([]);
-      for (let cx = 0; cx < this.cols / CHUNK_SIZE; cx++) {
-        // Create chunk with zeroed counts for all tile types
-        let blankChunk = {};
-        for (let tile of Object.keys(TILESET)) {
-          blankChunk[tile] = 0;
-        }
-        this.chunks[cy].push(blankChunk);
-
-        // Count tiles in chunk
-        const cy0 = cy * CHUNK_SIZE;
-        const cx0 = cx * CHUNK_SIZE;
-        this.forEachTile(
-          cx0,
-          cy0,
-          cx0 + CHUNK_SIZE,
-          cy0 + CHUNK_SIZE,
-          function (x, y) {
-            me.chunks[cy][cx][me.getTile(x, y)]++;
-          },
-        );
-      }
-    }
-  }
-
-  /**
    * Swaps the tiles at the given coordinates if they match the mask
    * @param {number} x - x coordinate of first tile
    * @param {number} y - y coordinate of first tile

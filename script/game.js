@@ -121,6 +121,7 @@ function init() {
   $("#score").text("");
   WORLD = new World();
   WORLDGENERATOR = new Worldgen();
+  WORLDLOGIC = new Worldlogic();
   WORLD = WORLDGENERATOR.generate({}, WORLD);
   RENDERER = new Renderer(
     document.getElementById("map"),
@@ -135,14 +136,13 @@ function init() {
   if (DEBUG) console.log(WORLD);
 }
 
-function gameLoop(loop = true) {
-  console.log('we made it')
+function gameLoop(loop = false) {
   const start = performance.now();
 
   // world tick rate can be <= frame rate
   if (start - LAST_TICK_TIME >= 1000 / TPS) {
     LAST_TICK_TIME = start;
-    WORLD.tick();
+    WORLDLOGIC.tick(WORLD);
 
     if (DEBUG) {
       const elapsed = performance.now() - start;
@@ -156,7 +156,7 @@ function gameLoop(loop = true) {
   if (LAST_ANT_COUNT === 1 && WORLD.ants > 1) {
     prompt(`
       The first workers (red) have begun to hatch from eggs (white) <br/>
-      Grow more fungus (teal) by bringing it plant material (green)
+      Grow more fungus (teal) by briwnging it plant material (green)
     `);
   }
   if (WORLD.ants > 1) {
