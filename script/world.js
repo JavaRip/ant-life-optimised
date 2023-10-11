@@ -1,4 +1,52 @@
 /**
+  Class WORLD
+
+  age:      int
+  ants:     int
+  chunks:   Array[Array[Chunk]]
+  cols:     int
+  rows:     int
+  surfaceY: int
+  tiles:    Array[Array[Tile]]
+*/
+
+/**
+  Enum TILE
+
+  Air
+  Soil
+  Sand
+  Stone
+  Worker
+  Queen
+  Egg
+  Corpse
+  Plant
+  Water
+  Fungus
+  Pest
+  Trail
+*/
+
+/**
+  Chunk
+
+  AIR:      int
+  CORPSE:   int​
+  EGG:      int
+  FUNGUS:   int
+  PEST:     int
+  PLANT:    int
+  QUEEN:    int
+  SAND:     int
+  SOIL:     int
+  STONE:    int
+  TRAIL:    int
+  WATER:    int
+  WORKER:   int
+*/
+
+/**
  * Contains the world state and methods for updating it
  * Tile logic is handled by Worldlogic
  * Tile generation is handled by Worldgen
