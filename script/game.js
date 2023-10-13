@@ -131,7 +131,7 @@ function init() {
   RENDERER.draw();
   prompt(`
     Spring has arrived and plants are sprouting <br/>
-    Guide your queen (purple) to fungus (teal) to begin your new colony1G
+    Guide your queen (purple) to fungus (teal) to begin your new colony
   `);
   if (DEBUG) console.log(WORLD);
 }
