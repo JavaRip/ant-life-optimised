@@ -169,14 +169,14 @@ class World {
    * @param {string[]} mask - allowed type of second tile
    * @returns {boolean} - whether the tiles were swapped
    */
-  swapTiles(x, y, a, b, mask = false) {
-    if (!checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
+  swapTiles(x, y, a, b, mask = false, world) {
+    if (!checkTile(x, y, mask, world.rows, world.cols, world.tiles)) {
       return false;
     } else {
-      const t1 = getTile(x, y, this.tiles);
-      const t2 = getTile(a, b, this.tiles);
-      this.setTile(a, b, t1);
-      this.setTile(x, y, t2);
+      const t1 = getTile(x, y, world.tiles);
+      const t2 = getTile(a, b, world.tiles);
+      world.setTile(a, b, t1);
+      world.setTile(x, y, t2);
       return true;
     }
   }

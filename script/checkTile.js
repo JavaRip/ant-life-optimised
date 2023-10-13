@@ -10,3 +10,4 @@ function checkTile(x, y, mask, rows, cols, tiles) {
   if (!mask) return true;
   return mask.includes(getTile(x, y, tiles));
 }
+
