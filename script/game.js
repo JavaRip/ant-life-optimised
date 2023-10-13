@@ -108,7 +108,7 @@ function _setBrushMask() {
 
   // Brush will only paint over tiles of the same type as the first tile clicked
   // If the first tile clicked is not paintable, the brush will only paint over AIR
-  const tile = WORLD.getTile(BRUSH_X, BRUSH_Y);
+  const tile = getTile(BRUSH_X, BRUSH_Y, WORLD.tiles);
   if (PAINTABLE_MASK.includes(tile)) {
     BRUSH_MASK = tile;
   } else {

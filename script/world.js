@@ -91,15 +91,6 @@ class World {
   }
 
   /**
-   * Returns the tile at the given coordinates
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   */
-  getTile(x, y) {
-    return this.tiles[y][x];
-  }
-
-  /**
    * Replaces the tile at the given coordinates
    * If set, mask will only allow the tile to be set if it is in the mask
    * @param {number} x - x coordinate
@@ -127,7 +118,7 @@ class World {
   checkTile(x, y, mask) {
     if (!legal(x, y, this.rows, this.cols)) return false;
     if (!mask) return true;
-    return mask.includes(this.getTile(x, y));
+    return mask.includes(getTile(x, y, this.tiles));
   }
 
   /**
@@ -195,8 +186,8 @@ class World {
     if (!this.checkTile(a, b, mask)) {
       return false;
     } else {
-      const t1 = this.getTile(x, y);
-      const t2 = this.getTile(a, b);
+      const t1 = getTile(x, y, this.tiles);
+      const t2 = getTile(a, b, this.tiles);
       this.setTile(a, b, t1);
       this.setTile(x, y, t2);
       return true;
