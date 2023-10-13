@@ -91,6 +91,15 @@ class World {
   }
 
   /**
+   * Returns the tile at the given coordinates
+   * @param {number} x - x coordinate
+   * @param {number} y - y coordinate
+   */
+  getTile(x, y) {
+    return this.tiles[y][x];
+  }
+
+  /**
    * Replaces the tile at the given coordinates
    * If set, mask will only allow the tile to be set if it is in the mask
    * @param {number} x - x coordinate
@@ -100,12 +109,25 @@ class World {
    * @returns {boolean} - whether the tile was set
    */
   setTile(x, y, tile, mask = false) {
-    if (!checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
+    if (!this.checkTile(x, y, mask)) {
       return false;
     } else {
       this.tiles[y][x] = tile;
       return true;
     }
+  }
+
+  /**
+   * Returns whether a tile is legal and optionally whether it is in the mask
+   * @param {number} x - x coordinate
+   * @param {number} y - y coordinate
+   * @param {string[]} mask - tile types that are allowed
+   * @returns {boolean} - whether the tile is legal and allowed by the mask
+   */
+  checkTile(x, y, mask) {
+    if (!legal(x, y, this.rows, this.cols)) return false;
+    if (!mask) return true;
+    return mask.includes(this.getTile(x, y));
   }
 
   /**
@@ -169,14 +191,14 @@ class World {
    * @param {string[]} mask - allowed type of second tile
    * @returns {boolean} - whether the tiles were swapped
    */
-  swapTiles(x, y, a, b, mask = false, world) {
-    if (!checkTile(x, y, mask, world.rows, world.cols, world.tiles)) {
+  swapTiles(x, y, a, b, mask = false) {
+    if (!this.checkTile(a, b, mask)) {
       return false;
     } else {
-      const t1 = getTile(x, y, world.tiles);
-      const t2 = getTile(a, b, world.tiles);
-      world.setTile(a, b, t1);
-      world.setTile(x, y, t2);
+      const t1 = this.getTile(x, y);
+      const t2 = this.getTile(a, b);
+      this.setTile(a, b, t1);
+      this.setTile(x, y, t2);
       return true;
     }
   }
@@ -213,7 +235,7 @@ class World {
       centerX + radius,
       centerY + radius,
       function (x, y) {
-        if (mask.length && !checkTile(x, y, mask, me.rows, me.cols, me.tiles)) return;
+        if (mask.length && !me.checkTile(x, y, mask)) return;
         if (!pointWithinRadius(centerX, centerY, x, y, radius)) return;
         me.setTile(x, y, tile);
       },
@@ -232,7 +254,7 @@ class World {
   fillRectangle(minX, minY, maxX, maxY, tile, mask = []) {
     const me = this;
     this.forEachTile(minX, minY, maxX, maxY, function (x, y) {
-      if (mask.length && !me.checkTile(x, y, mask, me.rows, me.cols, me.tiles)) return;
+      if (mask.length && !me.checkTile(x, y, mask)) return;
       me.setTile(x, y, tile);
     });
   }

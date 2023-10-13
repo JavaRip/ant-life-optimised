@@ -14,7 +14,6 @@ class Worldlogic {
     for (let y = 0; y < world.rows; y++) {
       for (let x = 0; x < world.cols; x++) {
         const dx = bias ? x : world.cols - 1 - x;
-        // if type of world is number
         this._doTileAction(world, dx, y);
       }
     }
@@ -63,7 +62,7 @@ class Worldlogic {
           cx0 + CHUNK_SIZE,
           cy0 + CHUNK_SIZE,
           function (x, y) {
-            chunks[cy][cx][getTile(x, y, world.tiles)]++;
+            chunks[cy][cx][world.getTile(x, y)]++;
           },
         );
       }
@@ -91,9 +90,9 @@ class Worldlogic {
       TRAIL: this._trailAction,
     };
 
-    const tile = getTile(x, y, world.tiles);
+    const tile = world.getTile(x, y);
     if (actions.hasOwnProperty(tile)) {
-      return actions[tile](world, x, y, this);
+      return actions[tile].call(this, world, x, y);
     } else {
       return false;
     }
@@ -106,13 +105,13 @@ class Worldlogic {
    * @param {number} y - Y coordinate of tile
    * @returns {boolean} - Whether the tile performed an action
    */
-  _sandAction(world, x, y, me) {
+  _sandAction(world, x, y) {
     // move down or diagonally down
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR", "WATER"], world) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "WATER"], world) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "WATER"], world)
+      world.swapTiles(x, y, x, y - 1, ["AIR", "WATER"]) ||
+      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "WATER"]) ||
+      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "WATER"])
     );
   }
 
@@ -120,18 +119,18 @@ class Worldlogic {
    * Performs the action for a CORPSE tile
    * CORPSE falls down and to the side and has a chance to be converted by adjacent PLANT tiles
    */
-  _corpseAction(world, x, y, me) {
+  _corpseAction(world, x, y) {
     // when touching plant, convert to plant
-    if (Math.random() <= CONVERT_PROB * me._touching(world, x, y, ["PLANT"])) {
+    if (Math.random() <= CONVERT_PROB * this._touching(world, x, y, ["PLANT"])) {
       return world.setTile(x, y, "PLANT");
     }
 
     // move down or diagonally down
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR"], world) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR"], world) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR"], world)
+      world.swapTiles(x, y, x, y - 1, ["AIR"]) ||
+      world.swapTiles(x, y, x - bias, y - 1, ["AIR"]) ||
+      world.swapTiles(x, y, x + bias, y - 1, ["AIR"])
     );
   }
 
@@ -140,11 +139,11 @@ class Worldlogic {
    * WATER falls down and to the side, evaporates under sky or if air to
    * left/right or near plant, and kills neighbouring creatures
    */
-  _waterAction(world, x, y, me) {
+  _waterAction(world, x, y) {
     // chance to kill neighbouring creatures
     if (
       Math.random() <= KILL_PROB &&
-      me._setOneTouching(world, x, y, "CORPSE", WATER_KILL_MASK)
+      this._setOneTouching(world, x, y, "CORPSE", WATER_KILL_MASK)
     ) {
       return world.setTile(x, y, "AIR");
     }
@@ -152,10 +151,10 @@ class Worldlogic {
     // chance to evaporate under sky or if air to left/right or near plant
     if (
       Math.random() <= EVAPORATE_PROB &&
-      (me._exposedToSky(world, x, y) ||
-        checkTile(x - 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
-        checkTile(x + 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
-        me._touching(world, x, y, ["PLANT"]))
+      (this._exposedToSky(world, x, y) ||
+        world.checkTile(x - 1, y, ["AIR"]) ||
+        world.checkTile(x + 1, y, ["AIR"]) ||
+        this._touching(world, x, y, ["PLANT"]))
     ) {
       return world.setTile(x, y, "AIR");
     }
@@ -163,10 +162,10 @@ class Worldlogic {
     // move down or diagonally down or sideways
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR", "CORPSE"], world) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "CORPSE"], world) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "CORPSE"], world) ||
-      world.swapTiles(x, y, x + bias, y, ["AIR", "CORPSE"], world)
+      world.swapTiles(x, y, x, y - 1, ["AIR", "CORPSE"]) ||
+      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "CORPSE"]) ||
+      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "CORPSE"]) ||
+      world.swapTiles(x, y, x + bias, y, ["AIR", "CORPSE"])
     );
   }
 
@@ -175,19 +174,19 @@ class Worldlogic {
    * PLANT falls down when unsupported by adjacent PLANT tiles and has a chance to grow
    * Growth is less likely when touching other PLANT or FUNGUS tiles so they form narrow stems
    */
-  _plantAction(world, x, y, me) {
+  _plantAction(world, x, y) {
     // when unsupported, move down
     if (
-      checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
-      me._touching(world, x, y, ["PLANT"]) < 2
+      world.checkTile(x, y - 1, ["AIR", "WATER"]) &&
+      this._touching(world, x, y, ["PLANT"]) < 2
     ) {
-      return world.swapTiles(x, y, x, y - 1, false, world);
+      return world.swapTiles(x, y, x, y - 1);
     }
 
     // chance to grow up/down or left/right or diagonal, reduced by nearby plant/fungus
     if (
       Math.random() <=
-      GROW_PROB / (me._touching(world, x, y, ["PLANT", "FUNGUS"], 3) ** 2 + 1)
+      GROW_PROB / (this._touching(world, x, y, ["PLANT", "FUNGUS"], 3) ** 2 + 1)
     ) {
       const bias = randomSign();
       const bias2 = randomSign();
@@ -204,7 +203,7 @@ class Worldlogic {
    * Performs the action for a FUNGUS tile
    * FUNGUS falls down and has a chance to convert to adjacent PLANT tiles if underground
    */
-  _fungusAction(world, x, y, me) {
+  _fungusAction(world, x, y) {
     // // Destroyed by air
     // if (Math.random() <= KILL_PROB && this._exposedToSky(x, y)) {
     //   return world.setTile(x, y, "SAND");
@@ -212,15 +211,15 @@ class Worldlogic {
 
     // when unsupported, move down
     if (
-      checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
-      me._touching(world, x, y, ["FUNGUS", "PLANT"]) < 2
+      world.checkTile(x, y - 1, ["AIR", "WATER"]) &&
+      this._touching(world, x, y, ["FUNGUS", "PLANT"]) < 2
     ) {
-      return world.swapTiles(x, y, x, y - 1, false, world);
+      return world.swapTiles(x, y, x, y - 1);
     }
 
     // When underground and touching plant, convert to fungus
     if (y < world.surfaceY && Math.random() <= CONVERT_PROB) {
-      if (me._setOneTouching(world, x, y, "FUNGUS", ["PLANT"])) {
+      if (this._setOneTouching(world, x, y, "FUNGUS", ["PLANT"])) {
         return true;
       }
     }
@@ -235,23 +234,23 @@ class Worldlogic {
    * Otherwise QUEEN moves towards closest FUNGUS if any are in range. QUEEN
    * will not convert FUNGUS if there are too few nearby to avoid extinction.
    */
-  _queenAction(world, x, y, me) {
+  _queenAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!me._climbable(world, x, y)) {
-      return world.swapTiles(x, y, x, y - 1, false, world);
+    if (!this._climbable(world, x, y)) {
+      return world.swapTiles(x, y, x, y - 1);
     }
 
     if (Math.random() <= QUEEN_SPEED) {
       // when few fungus nearby, move randomly
-      if (me._touching(world, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
-        return me._moveRandom(world, x, y, WALK_MASK);
+      if (this._touching(world, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
+        return this._moveRandom(world, x, y, WALK_MASK);
       }
       // when touching fungus, converts one to egg, else move any direction towards closest fungus
       const tileLaid = Math.random() <= EGG_LAY_PROB ? "EGG" : "AIR";
       return (
-        me._setOneTouching(world, x, y, tileLaid, ["FUNGUS"]) ||
-        me._searchForTile(world, x, y, ["FUNGUS"], QUEEN_RANGE, WALK_MASK) ||
-        me._moveRandom(world, x, y, WALK_MASK) // unreachable target
+        this._setOneTouching(world, x, y, tileLaid, ["FUNGUS"]) ||
+        this._searchForTile(world, x, y, ["FUNGUS"], QUEEN_RANGE, WALK_MASK) ||
+        this._moveRandom(world, x, y, WALK_MASK) // unreachable target
       );
     }
     return false;
@@ -262,14 +261,14 @@ class Worldlogic {
    * WORKER falls down when unable to climb and moves randomly.
    * When moving randomly, WORKER will push adjacent tiles, spreading them around.
    */
-  _workerAction(world, x, y, me) {
+  _workerAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!me._climbable(world, x, y)) {
-      return world.swapTiles(x, y, x, y - 1, false, world);
+    if (!this._climbable(world, x, y)) {
+      return world.swapTiles(x, y, x, y - 1);
     }
 
     // move randomly
-    return me._moveRandom(world, x, y, WALK_MASK, PUSH_MASK);
+    return this._moveRandom(world, x, y, WALK_MASK, PUSH_MASK);
   }
 
   /**
@@ -277,9 +276,9 @@ class Worldlogic {
    * PESTS kill adjacent WORKER, QUEEN, and EGG tiles, seek out targets, or fly around randomly.
    * PESTS can be killed by adjacent WORKER tiles but usually win a 1-on-1 fight.
    */
-  _pestAction(world, x, y, me) {
+  _pestAction(world, x, y) {
     // Destroyed by workers
-    if (Math.random() <= KILL_PROB * me._touching(world, x, y, ["WORKER"])) {
+    if (Math.random() <= KILL_PROB * this._touching(world, x, y, ["WORKER"])) {
       return world.setTile(x, y, "CORPSE");
     }
 
@@ -288,7 +287,7 @@ class Worldlogic {
     // Pests are hit by all neighbouring workers but only hit one worker per tick.
     // But pests have a higher base attack chance so typically win 1 on 1.
     if (Math.random() <= KILL_PROB * 2) {
-      if (me._setOneTouching(world, x, y, "CORPSE", PEST_TARGET_MASK)) {
+      if (this._setOneTouching(world, x, y, "CORPSE", PEST_TARGET_MASK)) {
         return true;
       }
     }
@@ -297,20 +296,20 @@ class Worldlogic {
     // Note: low chance allows going around obstacles and also reduces lag
     if (
       Math.random() < PEST_SEEK_PROB &&
-      me._searchForTile(world, x, y, PEST_TARGET_MASK, PEST_RANGE, WALK_MASK)
+      this._searchForTile(world, x, y, PEST_TARGET_MASK, PEST_RANGE, WALK_MASK)
     ) {
       return true;
     }
     // move randomly
     // Note: random movement uses a reduced tileset to avoid helping farm
-    return me._moveRandom(world, x, y, ROAM_MASK);
+    return this._moveRandom(world, x, y, ROAM_MASK);
   }
 
   /**
    * Performs the action for an EGG tile
    * EGG falls down and to the side and has a chance to hatch into a QUEEN or WORKER.
    */
-  _eggAction(world, x, y, me) {
+  _eggAction(world, x, y) {
     // chance to hatch, else move down or diagonally down
     if (Math.random() <= EGG_HATCH_PROB) {
       // hatch into QUEEN or WORKER
@@ -324,9 +323,9 @@ class Worldlogic {
     }
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR", "WATER"], world) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "WATER"], world) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "WATER"], world)
+      world.swapTiles(x, y, x, y - 1, ["AIR", "WATER"]) ||
+      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "WATER"]) ||
+      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "WATER"])
     );
   }
 
@@ -336,20 +335,20 @@ class Worldlogic {
    * TRAIL draws a random WORKER within range (if any) towards it. This is separate
    * from the WORKER action, so TRAIL lets WORKERs move faster than usual.
    */
-  _trailAction(world, x, y, me) {
+  _trailAction(world, x, y) {
     let result = false;
 
     // when unsupported on all sides, move down but don't stack
-    if (!me._climbable(world, x, y)) {
-      if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
+    if (!this._climbable(world, x, y)) {
+      if (world.checkTile(x, y - 1, "TRAIL")) {
         world.setTile(x, y, "AIR");
       } else {
-        world.swapTiles(x, y, x, y - 1, false, world);
+        world.swapTiles(x, y, x, y - 1);
       }
     }
 
     // find a worker to draw
-    const targets = me._touchingWhich(world, x, y, ["WORKER"], WORKER_RANGE);
+    const targets = this._touchingWhich(world, x, y, ["WORKER"], WORKER_RANGE);
     if (!targets.length) {
       result = false;
     } else {
@@ -360,18 +359,18 @@ class Worldlogic {
       const desiredA = a + Math.sign(x - a);
       const desiredB = b + Math.sign(y - b);
       result =
-        me._climbable(world, a, b) &&
-        (world.swapTiles(a, b, desiredA, desiredB, WALK_MASK, world) ||
-          world.swapTiles(a, b, a, desiredB, WALK_MASK, world) ||
-          world.swapTiles(a, b, desiredA, b, WALK_MASK, world));
+        this._climbable(world, a, b) &&
+        (world.swapTiles(a, b, desiredA, desiredB, WALK_MASK) ||
+          world.swapTiles(a, b, a, desiredB, WALK_MASK) ||
+          world.swapTiles(a, b, desiredA, b, WALK_MASK));
     }
 
     // Instantly destroyed on contact with anything that moves
     // Note: this is done after drawing workers so it works when touching a surface
     // however, this means we have to check that its not been consumed yet
     if (
-      checkTile(x, y, ["TRAIL"], world.rows, world.cols, world.tiles) && // check not consumed
-      me._touching(world, x, y, ["AIR", "TRAIL"]) < 8
+      world.checkTile(x, y, ["TRAIL"]) && // check not consumed
+      this._touching(world, x, y, ["AIR", "TRAIL"]) < 8
     ) {
       return world.setTile(x, y, "AIR");
     }
@@ -386,7 +385,7 @@ class Worldlogic {
    */
   _climbable(world, x, y) {
     return (
-      !checkTile(x, y - 1, ["AIR", "TRAIL"], world.rows, world.cols, world.tiles) ||
+      !world.checkTile(x, y - 1, ["AIR", "TRAIL"]) ||
       this._touching(world, x, y, CLIMB_MASK) > 0
     );
   }
@@ -406,13 +405,13 @@ class Worldlogic {
     const dy = randomIntInclusive(-1, 1);
 
     // when moving into a pushable tile, swap the two tiles in front
-    if (pushMask && checkTile(x + dx, y + dy, pushMask, world.rows, world.cols, world.tiles)) {
+    if (pushMask && world.checkTile(x + dx, y + dy, pushMask)) {
       // push less vertically than horizontally
-      world.swapTiles(x + dx, y + dy, x + dx + dx, y + dy, mask, world);
+      world.swapTiles(x + dx, y + dy, x + dx + dx, y + dy, mask);
     }
 
     // swap with tile in front
-    return world.swapTiles(x, y, x + dx, y + dy, mask, world);
+    return world.swapTiles(x, y, x + dx, y + dy, mask);
   }
 
   /**
@@ -423,7 +422,7 @@ class Worldlogic {
    */
   _exposedToSky(world, x, y) {
     for (let i = y + 1; i < world.rows; i++) {
-      if (!checkTile(x, i, ["AIR"], world.rows, world.cols, world.tiles)) return false;
+      if (!world.checkTile(x, i, ["AIR"])) return false;
     }
     return true;
   }
@@ -450,7 +449,7 @@ class Worldlogic {
    */
   _touchingWhich(world, x, y, mask, radius = 1) {
     // If no chunks in range contain target, skip searching
-    const threshold = checkTile(x, y, mask, world.rows, world.cols, world.tiles) ? 2 : 1;
+    const threshold = world.checkTile(x, y, mask) ? 2 : 1;
     if (!world.checkChunks(x, y, mask, radius, threshold)) return [];
 
     const touching = [];
@@ -460,7 +459,7 @@ class Worldlogic {
       x + radius,
       y + radius,
       function (a, b) {
-        if (checkTile(a, b, mask, world.rows, world.cols, world.tiles) && (a !== x || b !== y))
+        if (world.checkTile(a, b, mask) && (a !== x || b !== y))
           touching.push({ a, b });
       },
     );
@@ -506,16 +505,16 @@ class Worldlogic {
           const a = x + dx;
           const b = y + dy;
 
-          if (checkTile(a, b, targetMask, world.rows, world.cols, world.tiles)) {
+          if (world.checkTile(a, b, targetMask)) {
             // found
             const desiredX = x + Math.sign(dx);
             const desiredY = y + Math.sign(dy);
 
             // move towards if possible
             if (
-              world.swapTiles(x, y, desiredX, desiredY, walkableMask, world) ||
-              world.swapTiles(x, y, x, desiredY, walkableMask, world) ||
-              world.swapTiles(x, y, desiredX, y, walkableMask, world)
+              world.swapTiles(x, y, desiredX, desiredY, walkableMask) ||
+              world.swapTiles(x, y, x, desiredY, walkableMask) ||
+              world.swapTiles(x, y, desiredX, y, walkableMask)
             ) {
               return true;
             }

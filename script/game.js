@@ -108,7 +108,7 @@ function _setBrushMask() {
 
   // Brush will only paint over tiles of the same type as the first tile clicked
   // If the first tile clicked is not paintable, the brush will only paint over AIR
-  const tile = getTile(BRUSH_X, BRUSH_Y, WORLD.tiles);
+  const tile = WORLD.getTile(BRUSH_X, BRUSH_Y);
   if (PAINTABLE_MASK.includes(tile)) {
     BRUSH_MASK = tile;
   } else {
@@ -131,7 +131,7 @@ function init() {
   RENDERER.draw();
   prompt(`
     Spring has arrived and plants are sprouting <br/>
-    Guide your queen (purple) to fungus (teal) to begin your new colony
+    Guide your queen (purple) to fungus (teal) to begin your new colony1G
   `);
   if (DEBUG) console.log(WORLD);
 }

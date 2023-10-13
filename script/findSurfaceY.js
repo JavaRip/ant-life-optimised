@@ -3,11 +3,9 @@
  * @param {number} x - X coordinate to check
  * @returns {number} - Y coordinate of the first tile below the given x coordinate that is not AIR or WATER
  */
-function findSurfaceY(x, world, rows, cols) {
+function _findSurfaceY(x, world) {
   for (let y = world.rows - 1; y >= 0; y--) {
-    if (!checkTile(x, y, ["AIR", "WATER"], rows, cols, world.tiles)) {
-      return y;
-    }
+    if (!world.checkTile(x, y, ["AIR", "WATER"])) return y;
   }
   return 0;
 }
