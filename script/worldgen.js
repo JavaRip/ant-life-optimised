@@ -178,7 +178,7 @@ class Worldgen {
     const plantProb = surfacePlantCount / 100;
     for (let x = 0; x < world.cols; x++) {
       if (Math.random() <= plantProb) {
-        world.setTile(x, this._findSurfaceY(x, world) + 1, "PLANT");
+        world.setTile(x, _findSurfaceY(x, world) + 1, "PLANT");
       }
     }
 
@@ -236,17 +236,5 @@ class Worldgen {
         mask,
       );
     }
-  }
-
-  /**
-   * Returns the surface Y coordinate at the given X coordinate
-   * @param {number} x - X coordinate to check
-   * @returns {number} - Y coordinate of the first tile below the given x coordinate that is not AIR or WATER
-   */
-  _findSurfaceY(x, world) {
-    for (let y = world.rows - 1; y >= 0; y--) {
-      if (!world.checkTile(x, y, ["AIR", "WATER"])) return y;
-    }
-    return 0;
   }
 }

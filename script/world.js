@@ -55,14 +55,22 @@
  * @param {object} generatorSettings - Settings for the world generator
  */
 class World {
-  constructor(rows = ROW_COUNT, cols = COL_COUNT) {
+  constructor(
+    rows = ROW_COUNT,
+    cols = COL_COUNT,
+    age = 0,
+    ants = 1,
+    surfaceY = 80,
+    tiles = [],
+    chunks = [],
+    ) {
     this.rows = rows;
     this.cols = cols;
-    this.age = 0;
-    this.ants = 1;
-    this.surfaceY = 80;
-    this.tiles = [];
-    this.chunks = [];
+    this.age = age;
+    this.ants = ants;
+    this.surfaceY = surfaceY;
+    this.tiles = tiles;
+    this.chunks = chunks;
   }
 
   /**
@@ -117,7 +125,7 @@ class World {
    * @returns {boolean} - whether the tile is legal and allowed by the mask
    */
   checkTile(x, y, mask) {
-    if (!this._legal(x, y)) return false;
+    if (!legal(x, y, this.rows, this.cols)) return false;
     if (!mask) return true;
     return mask.includes(this.getTile(x, y));
   }
@@ -132,7 +140,7 @@ class World {
    * @returns {boolean} - whether the chunks contain the required number of tiles
    */
   checkChunks(x, y, mask, distance = 0, threshold = 1) {
-    if (!this._legal(x, y)) return false;
+    if (!legal(x, y, this.rows, this.cols)) return false;
     if (!mask) return true;
     if (!threshold) return true;
     const chunks = this._getChunks(x, y, distance);
@@ -249,13 +257,6 @@ class World {
       if (mask.length && !me.checkTile(x, y, mask)) return;
       me.setTile(x, y, tile);
     });
-  }
-
-  /**
-   * Returns whether a pair of coordinates is within the bounds of the map
-   */
-  _legal(x, y) {
-    return x >= 0 && y >= 0 && x < this.cols && y < this.rows;
   }
 
   /**
