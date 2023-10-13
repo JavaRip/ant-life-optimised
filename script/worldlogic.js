@@ -152,8 +152,8 @@ class Worldlogic {
     if (
       Math.random() <= EVAPORATE_PROB &&
       (this._exposedToSky(world, x, y) ||
-        world.checkTile(x - 1, y, ["AIR"]) ||
-        world.checkTile(x + 1, y, ["AIR"]) ||
+        checkTile(x - 1, y, ["AIR"], world.rows, world.cols, world) ||
+        checkTile(x + 1, y, ["AIR"], world.rows, world.cols, world) ||
         this._touching(world, x, y, ["PLANT"]))
     ) {
       return world.setTile(x, y, "AIR");
@@ -177,7 +177,7 @@ class Worldlogic {
   _plantAction(world, x, y) {
     // when unsupported, move down
     if (
-      world.checkTile(x, y - 1, ["AIR", "WATER"]) &&
+      checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world) &&
       this._touching(world, x, y, ["PLANT"]) < 2
     ) {
       return world.swapTiles(x, y, x, y - 1);
@@ -211,7 +211,7 @@ class Worldlogic {
 
     // when unsupported, move down
     if (
-      world.checkTile(x, y - 1, ["AIR", "WATER"]) &&
+      checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world) &&
       this._touching(world, x, y, ["FUNGUS", "PLANT"]) < 2
     ) {
       return world.swapTiles(x, y, x, y - 1);
@@ -340,7 +340,7 @@ class Worldlogic {
 
     // when unsupported on all sides, move down but don't stack
     if (!this._climbable(world, x, y)) {
-      if (world.checkTile(x, y - 1, "TRAIL")) {
+      if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world)) {
         world.setTile(x, y, "AIR");
       } else {
         world.swapTiles(x, y, x, y - 1);
@@ -369,7 +369,7 @@ class Worldlogic {
     // Note: this is done after drawing workers so it works when touching a surface
     // however, this means we have to check that its not been consumed yet
     if (
-      world.checkTile(x, y, ["TRAIL"]) && // check not consumed
+      checkTile(x, y, ["TRAIL"], world.rows, world.cols, world) && // check not consumed
       this._touching(world, x, y, ["AIR", "TRAIL"]) < 8
     ) {
       return world.setTile(x, y, "AIR");
@@ -385,7 +385,7 @@ class Worldlogic {
    */
   _climbable(world, x, y) {
     return (
-      !world.checkTile(x, y - 1, ["AIR", "TRAIL"]) ||
+      !checkTile(x, y - 1, ["AIR", "TRAIL"], world.rows, world.cols, world) ||
       this._touching(world, x, y, CLIMB_MASK) > 0
     );
   }
@@ -405,7 +405,7 @@ class Worldlogic {
     const dy = randomIntInclusive(-1, 1);
 
     // when moving into a pushable tile, swap the two tiles in front
-    if (pushMask && world.checkTile(x + dx, y + dy, pushMask)) {
+    if (pushMask && checkTile(x + dx, y + dy, pushMask, world.rows, world.cols, world)) {
       // push less vertically than horizontally
       world.swapTiles(x + dx, y + dy, x + dx + dx, y + dy, mask);
     }
@@ -422,7 +422,7 @@ class Worldlogic {
    */
   _exposedToSky(world, x, y) {
     for (let i = y + 1; i < world.rows; i++) {
-      if (!world.checkTile(x, i, ["AIR"])) return false;
+      if (!checkTile(x, i, ["AIR"], world.rows, world.cols, world)) return false;
     }
     return true;
   }
@@ -449,7 +449,7 @@ class Worldlogic {
    */
   _touchingWhich(world, x, y, mask, radius = 1) {
     // If no chunks in range contain target, skip searching
-    const threshold = world.checkTile(x, y, mask) ? 2 : 1;
+    const threshold = checkTile(x, y, mask, world.rows, world.cols, world) ? 2 : 1;
     if (!world.checkChunks(x, y, mask, radius, threshold)) return [];
 
     const touching = [];
@@ -459,7 +459,7 @@ class Worldlogic {
       x + radius,
       y + radius,
       function (a, b) {
-        if (world.checkTile(a, b, mask) && (a !== x || b !== y))
+        if (checkTile(a, b, mask, world.rows, world.cols, world) && (a !== x || b !== y))
           touching.push({ a, b });
       },
     );
@@ -505,7 +505,7 @@ class Worldlogic {
           const a = x + dx;
           const b = y + dy;
 
-          if (world.checkTile(a, b, targetMask)) {
+          if (checkTile(a, b, targetMask, world.rows, world.cols, world)) {
             // found
             const desiredX = x + Math.sign(dx);
             const desiredY = y + Math.sign(dy);
