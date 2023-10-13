@@ -5,8 +5,8 @@
  * @param {string[]} mask - tile types that are allowed
  * @returns {boolean} - whether the tile is legal and allowed by the mask
  */
-function checkTile(x, y, mask, rows, cols, world) {
+function checkTile(x, y, mask, rows, cols, tiles) {
   if (!legal(x, y, rows, cols)) return false;
   if (!mask) return true;
-  return mask.includes(getTile(x, y, world.tiles));
+  return mask.includes(getTile(x, y, tiles));
 }

@@ -100,7 +100,7 @@ class World {
    * @returns {boolean} - whether the tile was set
    */
   setTile(x, y, tile, mask = false) {
-    if (!checkTile(x, y, mask, this.rows, this.cols, this)) {
+    if (!checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
       return false;
     } else {
       this.tiles[y][x] = tile;
@@ -170,7 +170,7 @@ class World {
    * @returns {boolean} - whether the tiles were swapped
    */
   swapTiles(x, y, a, b, mask = false) {
-    if (!checkTile(x, y, mask, this.rows, this.cols, this)) {
+    if (!checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
       return false;
     } else {
       const t1 = getTile(x, y, this.tiles);
@@ -213,7 +213,7 @@ class World {
       centerX + radius,
       centerY + radius,
       function (x, y) {
-        if (mask.length && !checkTile(x, y, mask, me.rows, me.cols, me)) return;
+        if (mask.length && !checkTile(x, y, mask, me.rows, me.cols, me.tiles)) return;
         if (!pointWithinRadius(centerX, centerY, x, y, radius)) return;
         me.setTile(x, y, tile);
       },
@@ -232,7 +232,7 @@ class World {
   fillRectangle(minX, minY, maxX, maxY, tile, mask = []) {
     const me = this;
     this.forEachTile(minX, minY, maxX, maxY, function (x, y) {
-      if (mask.length && !me.checkTile(x, y, mask, me.rows, me.cols, me)) return;
+      if (mask.length && !me.checkTile(x, y, mask, me.rows, me.cols, me.tiles)) return;
       me.setTile(x, y, tile);
     });
   }

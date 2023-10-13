@@ -5,7 +5,7 @@
  */
 function findSurfaceY(x, world, rows, cols) {
   for (let y = world.rows - 1; y >= 0; y--) {
-    if (!checkTile(x, y, ["AIR", "WATER"], rows, cols, world)) {
+    if (!checkTile(x, y, ["AIR", "WATER"], rows, cols, world.tiles)) {
       return y;
     }
   }
