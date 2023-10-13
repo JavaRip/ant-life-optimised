@@ -62,7 +62,7 @@ class Worldlogic {
           cx0 + CHUNK_SIZE,
           cy0 + CHUNK_SIZE,
           function (x, y) {
-            chunks[cy][cx][world.getTile(x, y)]++;
+            chunks[cy][cx][getTile(x, y, world.tiles)]++;
           },
         );
       }
@@ -90,7 +90,7 @@ class Worldlogic {
       TRAIL: this._trailAction,
     };
 
-    const tile = world.getTile(x, y);
+    const tile = getTile(x, y, world.tiles);
     if (actions.hasOwnProperty(tile)) {
       return actions[tile].call(this, world, x, y);
     } else {

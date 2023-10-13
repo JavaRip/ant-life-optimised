@@ -8,5 +8,5 @@
 function checkTile(x, y, mask, rows, cols, world) {
   if (!legal(x, y, rows, cols)) return false;
   if (!mask) return true;
-  return mask.includes(world.getTile(x, y));
+  return mask.includes(getTile(x, y, world.tiles));
 }
