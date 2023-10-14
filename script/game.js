@@ -210,7 +210,16 @@ function doInput(draw = true) {
   }
   const brushSize = Math.round($("#brush-size").val());
   const brushMat = $("#brush-mat").val();
-  WORLD.fillCircle(BRUSH_X, BRUSH_Y, brushSize, brushMat, BRUSH_MASK);
+  WORLD.tiles = fillCircle(
+    WORLD.rows,
+    WORLD.cols,
+    BRUSH_X,
+    BRUSH_Y,
+    brushSize,
+    brushMat,
+    WORLD.tiles,
+    BRUSH_MASK,
+  );
   if (draw) RENDERER.draw();
 }
 

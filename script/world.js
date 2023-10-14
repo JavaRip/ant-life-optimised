@@ -151,33 +151,6 @@ class World {
   }
 
   /**
-   * Sets all tiles within a given radius of a tile to a given type if they match the mask
-   * @param {number} centerX - x coordinate of center tile
-   * @param {number} centerY - y coordinate of center tile
-   * @param {number} radius - radius of circle
-   * @param {string} tile - type of tile to set
-   * @param {string[]} mask - tile types that are allowed to be replaced
-   */
-  fillCircle(centerX, centerY, radius, tile, mask = []) {
-    const me = this;
-    forEachTile(
-      this.rows,
-      this.cols,
-      centerX - radius,
-      centerY - radius,
-      centerX + radius,
-      centerY + radius,
-      function (x, y) {
-        if (mask.length && !checkTile(x, y, mask, me.rows, me.cols, me.tiles)) {
-          return;
-        }
-        if (!pointWithinRadius(centerX, centerY, x, y, radius)) return;
-        me.tiles = setTile(me.rows, me.cols, me.tiles, x, y, tile).tiles;
-      },
-    );
-  }
-
-  /**
    * Sets all tiles within a given rectangle to a given type if they match the mask
    * @param {number} minX - minimum x coordinate
    * @param {number} minY - minimum y coordinate

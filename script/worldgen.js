@@ -191,26 +191,54 @@ class Worldgen {
 
     // Bedrock
     for (let x = 0; x < world.cols; x++) {
-      world.fillCircle(x, 0, randomIntInclusive(1, 6), "STONE");
+      world.tiles = fillCircle(
+        world.rows,
+        world.cols,
+        x,
+        0,
+        randomIntInclusive(1, 6),
+        "STONE",
+        world.tiles,
+      );
     }
 
     // Starting area
     // Clear a cone shape
     const queenToCeil = world.rows - surfaceY + 1;
     const halfStartArea = Math.round(startAreaSize / 2);
+
     for (let x = midX - halfStartArea; x < midX + halfStartArea; x++) {
-      world.fillCircle(x, world.rows, queenToCeil, "AIR");
+      world.tiles = fillCircle(
+        world.rows,
+        world.cols,
+        x,
+        world.rows,
+        queenToCeil,
+        "AIR",
+        world.tiles,
+      );
     }
-    world.fillCircle(midX, surfaceY, startAreaSize, "SOIL", [
-      "SAND",
-      "STONE",
-    ]);
+
+    world.tiles = fillCircle(
+      world.rows,
+      world.cols,
+      midX,
+      surfaceY,
+      startAreaSize,
+      "SOIL",
+      world.tiles,
+      ["SAND", "STONE"],
+    );
+
     // Guarantee an easy to reach fungus
-    world.fillCircle(
+    world.tiles = fillCircle(
+      world.rows,
+      world.cols,
       randomIntInclusive(midX - halfStartArea, midX + halfStartArea),
       randomIntInclusive(surfaceY - startAreaSize, surfaceY),
       4,
       "FUNGUS",
+      world.tiles,
     );
 
     // Starting units
@@ -242,11 +270,14 @@ class Worldgen {
     count = (count * tileCount) / 10000;
 
     for (let i = 0; i < count; i++) {
-      world.fillCircle(
+      world.tiles = fillCircle(
+        world.rows,
+        world.cols,
         randomIntInclusive(0, world.cols),
         randomIntInclusive(0, maxHeight),
         randomIntInclusive(minSize, maxSize),
         tile,
+        world.tiles,
         mask,
       );
     }
