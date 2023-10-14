@@ -16,7 +16,9 @@ function checkChunks(rows, cols, chunkSize, chunks, x, y, mask, distance = 0, th
   for (let chunk of gotChunks) {
     for (let tile of mask) {
       total += chunk[tile];
-      if (total > threshold) return true;
+      if (total > threshold) {
+        return true;
+      }
     }
   }
   return false;

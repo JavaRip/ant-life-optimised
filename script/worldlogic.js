@@ -176,7 +176,7 @@ class Worldlogic {
     // chance to evaporate under sky or if air to left/right or near plant
     if (
       Math.random() <= EVAPORATE_PROB &&
-      (this._exposedToSky(world, x, y) ||
+      (exposedToSky(world.rows, world.cols, world.tiles, x, y) ||
         checkTile(x - 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
         checkTile(x + 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
         this._touching(world, x, y, ["PLANT"], world.rows, world.cols, world.tiles))
@@ -612,21 +612,6 @@ class Worldlogic {
         y + dy,
         mask,
       );
-  }
-
-  /**
-   * Returns whether a tile is exposed to the sky
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @returns {boolean} whether the tile is exposed to the sky
-   */
-  _exposedToSky(world, x, y) {
-    for (let i = y + 1; i < world.rows; i++) {
-      if (!checkTile(x, i, ["AIR"], world.rows, world.cols, world.tiles)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   /**
