@@ -151,44 +151,6 @@ class World {
   }
 
   /**
-   * Swaps the tiles at the given coordinates if they match the mask
-   * @param {number} x - x coordinate of first tile
-   * @param {number} y - y coordinate of first tile
-   * @param {number} a - x coordinate of second tile
-   * @param {number} b - y coordinate of second tile
-   * @param {string[]} mask - allowed type of second tile
-   * @returns {boolean} - whether the tiles were swapped
-   */
-  swapTiles(x, y, a, b, mask = false) {
-    if (!checkTile(a, b, mask, this.rows, this.cols, this.tiles)) {
-      return false;
-    } else {
-      const t1 = getTile(x, y, this.tiles);
-      const t2 = getTile(a, b, this.tiles);
-
-      this.tiles = setTile(
-        this.rows,
-        this.cols,
-        this.tiles,
-        a,
-        b,
-        t1,
-      ).tiles;
-
-      this.tiles = setTile(
-        this.rows,
-        this.cols,
-        this.tiles,
-        x,
-        y,
-        t2,
-      ).tiles;
-
-      return true;
-    }
-  }
-
-  /**
    * Sets all tiles within a given radius of a tile to a given type if they match the mask
    * @param {number} centerX - x coordinate of center tile
    * @param {number} centerY - y coordinate of center tile

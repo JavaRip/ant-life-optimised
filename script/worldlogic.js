@@ -76,9 +76,36 @@ class Worldlogic {
     // move down or diagonally down
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR", "WATER"]) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "WATER"]) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "WATER"])
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1,
+        ["AIR", "WATER"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x + bias,
+        y - 1,
+        ["AIR", "WATER"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x - bias,
+        y - 1,
+        ["AIR", "WATER"],
+      )
     );
   }
 
@@ -97,9 +124,36 @@ class Worldlogic {
     // move down or diagonally down
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR"]) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR"]) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR"])
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1,
+        ["AIR"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x - bias,
+        y - 1,
+        ["AIR"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x + bias,
+        y - 1,
+        ["AIR"],
+      )
     );
   }
 
@@ -135,10 +189,46 @@ class Worldlogic {
     // move down or diagonally down or sideways
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR", "CORPSE"]) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "CORPSE"]) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "CORPSE"]) ||
-      world.swapTiles(x, y, x + bias, y, ["AIR", "CORPSE"])
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1,
+        ["AIR", "CORPSE"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x + bias,
+        y - 1,
+        ["AIR", "CORPSE"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x - bias,
+        y - 1,
+        ["AIR", "CORPSE"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x + bias,
+        y,
+        ["AIR", "CORPSE"],
+      )
     );
   }
 
@@ -153,7 +243,15 @@ class Worldlogic {
       checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
       this._touching(world, x, y, ["PLANT"]) < 2
     ) {
-      return world.swapTiles(x, y, x, y - 1);
+      return swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1,
+      );
     }
 
     // chance to grow up/down or left/right or diagonal, reduced by nearby plant/fungus
@@ -216,7 +314,15 @@ class Worldlogic {
       checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
       this._touching(world, x, y, ["FUNGUS", "PLANT"]) < 2
     ) {
-      return world.swapTiles(x, y, x, y - 1);
+      return swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1
+      );
     }
 
     // When underground and touching plant, convert to fungus
@@ -239,7 +345,15 @@ class Worldlogic {
   _queenAction(world, x, y) {
     // when unsupported on all sides, move down
     if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
-      return world.swapTiles(x, y, x, y - 1);
+      return swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1
+      );
     }
 
     if (Math.random() <= QUEEN_SPEED) {
@@ -266,7 +380,15 @@ class Worldlogic {
   _workerAction(world, x, y) {
     // when unsupported on all sides, move down
     if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
-      return world.swapTiles(x, y, x, y - 1);
+      return swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1
+      );
     }
 
     // move randomly
@@ -330,9 +452,36 @@ class Worldlogic {
     }
     const bias = randomSign();
     return (
-      world.swapTiles(x, y, x, y - 1, ["AIR", "WATER"]) ||
-      world.swapTiles(x, y, x - bias, y - 1, ["AIR", "WATER"]) ||
-      world.swapTiles(x, y, x + bias, y - 1, ["AIR", "WATER"])
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1,
+        ["AIR", "WATER"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x - bias,
+        y - 1,
+        ["AIR", "WATER"],
+      ) ||
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x + bias,
+        y - 1,
+        ["AIR", "WATER"],
+      )
     );
   }
 
@@ -350,7 +499,15 @@ class Worldlogic {
       if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
         world.setTile(x, y, "AIR");
       } else {
-        world.swapTiles(x, y, x, y - 1);
+        swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x,
+        y - 1,
+      );
       }
     }
 
@@ -367,9 +524,38 @@ class Worldlogic {
       const desiredB = b + Math.sign(y - b);
       result =
         climbable(world.rows, world.cols, world.tiles, a, b, world, this) &&
-        (world.swapTiles(a, b, desiredA, desiredB, WALK_MASK) ||
-          world.swapTiles(a, b, a, desiredB, WALK_MASK) ||
-          world.swapTiles(a, b, desiredA, b, WALK_MASK));
+        (
+          swapTiles(
+          world.rows,
+          world.cols,
+          world.tiles,
+          a,
+          b,
+          desiredA,
+          desiredB,
+          WALK_MASK,
+        ) ||
+        swapTiles(
+          world.rows,
+          world.cols,
+          world.tiles,
+          a,
+          b,
+          a,
+          desiredB,
+          WALK_MASK,
+        ) ||
+        swapTiles(
+          world.rows,
+          world.cols,
+          world.tiles,
+          a,
+          b,
+          desiredA,
+          b,
+          WALK_MASK,
+        )
+      );
     }
 
     // Instantly destroyed on contact with anything that moves
@@ -403,11 +589,29 @@ class Worldlogic {
     // when moving into a pushable tile, swap the two tiles in front
     if (pushMask && checkTile(x + dx, y + dy, pushMask, world.rows, world.cols, world.tiles)) {
       // push less vertically than horizontally
-      world.swapTiles(x + dx, y + dy, x + dx + dx, y + dy, mask);
+      swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x + dx,
+        y + dy,
+        x + dx + dx,
+        y + dy,
+        mask,
+      );
     }
 
     // swap with tile in front
-    return world.swapTiles(x, y, x + dx, y + dy, mask);
+    return swapTiles(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y,
+        x + dx,
+        y + dy,
+        mask,
+      );
   }
 
   /**
@@ -521,9 +725,36 @@ class Worldlogic {
 
             // move towards if possible
             if (
-              world.swapTiles(x, y, desiredX, desiredY, walkableMask) ||
-              world.swapTiles(x, y, x, desiredY, walkableMask) ||
-              world.swapTiles(x, y, desiredX, y, walkableMask)
+              swapTiles(
+                world.rows,
+                world.cols,
+                world.tiles,
+                x,
+                y,
+                desiredX,
+                desiredY,
+                walkableMask,
+              ) ||
+              swapTiles(
+                world.rows,
+                world.cols,
+                world.tiles,
+                x,
+                y,
+                x,
+                desiredY,
+                walkableMask,
+              ) ||
+              swapTiles(
+                world.rows,
+                world.cols,
+                world.tiles,
+                x,
+                y,
+                desiredX,
+                y,
+                walkableMask,
+              )
             ) {
               return true;
             }
