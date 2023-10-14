@@ -203,7 +203,7 @@ class Worldlogic {
    */
   _queenAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!this._climbable(world, x, y)) {
+    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
       return world.swapTiles(x, y, x, y - 1);
     }
 
@@ -230,7 +230,7 @@ class Worldlogic {
    */
   _workerAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!this._climbable(world, x, y)) {
+    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
       return world.swapTiles(x, y, x, y - 1);
     }
 
@@ -306,7 +306,7 @@ class Worldlogic {
     let result = false;
 
     // when unsupported on all sides, move down but don't stack
-    if (!this._climbable(world, x, y)) {
+    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
       if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
         world.setTile(x, y, "AIR");
       } else {
@@ -326,7 +326,7 @@ class Worldlogic {
       const desiredA = a + Math.sign(x - a);
       const desiredB = b + Math.sign(y - b);
       result =
-        this._climbable(world, a, b) &&
+        climbable(world.rows, world.cols, world.tiles, a, b, world, this) &&
         (world.swapTiles(a, b, desiredA, desiredB, WALK_MASK) ||
           world.swapTiles(a, b, a, desiredB, WALK_MASK) ||
           world.swapTiles(a, b, desiredA, b, WALK_MASK));
@@ -342,19 +342,6 @@ class Worldlogic {
       return world.setTile(x, y, "AIR");
     }
     return result;
-  }
-
-  /**
-   * Returns whether a tile is climbable
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @returns {boolean} whether the tile is climbable
-   */
-  _climbable(world, x, y) {
-    return (
-      !checkTile(x, y - 1, ["AIR", "TRAIL"], world.rows, world.cols, world.tiles) ||
-      this._touching(world, x, y, CLIMB_MASK) > 0
-    );
   }
 
   /**
