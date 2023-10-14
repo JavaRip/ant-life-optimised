@@ -368,7 +368,19 @@ class Worldlogic {
       const sotRes = this._setOneTouching(world, x, y, tileLaid, ["FUNGUS"]);
       if (sotRes) return sotRes;
 
-      const sftRes = this._searchForTile(world, x, y, ["FUNGUS"], QUEEN_RANGE, WALK_MASK);
+      const sftRes = searchForTile(
+        world.rows,
+        world.cols,
+        world.tiles,
+        world.chunks,
+        CHUNK_SIZE,
+        x,
+        y,
+        ["FUNGUS"],
+        QUEEN_RANGE,
+        WALK_MASK
+      );
+
       if (sftRes) return sftRes;
 
       const mrRes = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
@@ -427,7 +439,18 @@ class Worldlogic {
     // Note: low chance allows going around obstacles and also reduces lag
     if (
       Math.random() < PEST_SEEK_PROB &&
-      this._searchForTile(world, x, y, PEST_TARGET_MASK, PEST_RANGE, WALK_MASK)
+      searchForTile(
+        world.rows,
+        world.cols,
+        world.tiles,
+        world.chunks,
+        world.chunkSize,
+        x,
+        y,
+        PEST_TARGET_MASK,
+        PEST_RANGE,
+        WALK_MASK,
+      )
     ) {
       return true;
     }
@@ -653,87 +676,6 @@ class Worldlogic {
       world.tiles = tileSet.tiles;
       return tileSet.change;
     }
-    return false;
-  }
-
-  /**
-   * Move one step towards the nearest tile matching the target mask (if any are in range),
-   * switching places with the next tile in that direction
-   * @param {number} x - mover x coordinate
-   * @param {number} y - mover y coordinate
-   * @param {string[]} targetMask - tile types to move towards
-   * @param {number} radius - maximum search range
-   * @param {string[]} walkableMask - tile types that can be moved into
-   * @returns {boolean} whether the tile moved
-   */
-  _searchForTile(world, x, y, targetMask, radius, walkableMask = ["AIR"]) {
-    // If no chunks in range contain target, skip searching
-    if (!checkChunks(
-      world.rows,
-      world.cols,
-      CHUNK_SIZE,
-      world.chunks,
-      x,
-      y,
-      targetMask,
-      radius
-    )) {
-      return false;
-    }
-
-    for (let r = 1; r <= radius; r++) {
-      for (let dx = -r; dx <= r; dx++) {
-        for (let dy = -r; dy <= r; dy++) {
-          if (dx === 0 && dy === 0) continue;
-
-          const a = x + dx;
-          const b = y + dy;
-
-          if (checkTile(a, b, targetMask, world.rows, world.cols, world.tiles)) {
-            // found
-            const desiredX = x + Math.sign(dx);
-            const desiredY = y + Math.sign(dy);
-
-            // move towards if possible
-            if (
-              swapTiles(
-                world.rows,
-                world.cols,
-                world.tiles,
-                x,
-                y,
-                desiredX,
-                desiredY,
-                walkableMask,
-              ) ||
-              swapTiles(
-                world.rows,
-                world.cols,
-                world.tiles,
-                x,
-                y,
-                x,
-                desiredY,
-                walkableMask,
-              ) ||
-              swapTiles(
-                world.rows,
-                world.cols,
-                world.tiles,
-                x,
-                y,
-                desiredX,
-                y,
-                walkableMask,
-              )
-            ) {
-              return true;
-            }
-          }
-        }
-      }
-    }
-    // none reachable found in radius
     return false;
   }
 }

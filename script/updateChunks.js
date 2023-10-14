@@ -1,7 +1,7 @@
 /**
  * Builds a list of chunks and their tile counts
  */
-function updateChunks(rows, cols, tileset, chunkSize, tiles, world) {
+function updateChunks(rows, cols, tileset, chunkSize, tiles) {
   const chunks = [];
 
   for (let cy = 0; cy < rows / chunkSize; cy++) {
