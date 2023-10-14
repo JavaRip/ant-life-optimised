@@ -182,22 +182,6 @@ class World {
   }
 
   /**
-   * Runs a function on each tile within a given rectangle
-   * @param {number} minX - minimum x coordinate
-   * @param {number} minY - minimum y coordinate
-   * @param {number} maxX - maximum x coordinate
-   * @param {number} maxY - maximum y coordinate
-   * @param {function} func - function to run on each tile
-   */
-  forEachTile(minX, minY, maxX, maxY, func) {
-    for (let y = Math.max(minY, 0); y <= Math.min(maxY, this.rows - 1); y++) {
-      for (let x = Math.max(minX, 0); x <= Math.min(maxX, this.cols - 1); x++) {
-        func(x, y);
-      }
-    }
-  }
-
-  /**
    * Sets all tiles within a given radius of a tile to a given type if they match the mask
    * @param {number} centerX - x coordinate of center tile
    * @param {number} centerY - y coordinate of center tile
@@ -207,7 +191,9 @@ class World {
    */
   fillCircle(centerX, centerY, radius, tile, mask = []) {
     const me = this;
-    this.forEachTile(
+    forEachTile(
+      this.rows,
+      this.cols,
       centerX - radius,
       centerY - radius,
       centerX + radius,
@@ -233,7 +219,7 @@ class World {
    */
   fillRectangle(minX, minY, maxX, maxY, tile, mask = []) {
     const me = this;
-    this.forEachTile(minX, minY, maxX, maxY, function (x, y) {
+    forEachTile(this.rows, this.cols, minX, minY, maxX, maxY, function (x, y) {
       if (mask.length && !me.checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
         return;
       }

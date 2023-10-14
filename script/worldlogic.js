@@ -409,7 +409,9 @@ class Worldlogic {
     if (!world.checkChunks(x, y, mask, radius, threshold)) return [];
 
     const touching = [];
-    world.forEachTile(
+    forEachTile(
+      world.rows,
+      world.cols,
       x - radius,
       y - radius,
       x + radius,

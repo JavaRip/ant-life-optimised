@@ -17,7 +17,9 @@ function updateChunks(rows, cols, tileset, chunkSize, tiles, world) {
       // Count tiles in chunk
       const cy0 = cy * chunkSize;
       const cx0 = cx * chunkSize;
-      world.forEachTile(
+      forEachTile(
+        rows,
+        cols,
         cx0,
         cy0,
         cx0 + chunkSize,
