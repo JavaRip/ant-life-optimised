@@ -100,25 +100,12 @@ class World {
    * @returns {boolean} - whether the tile was set
    */
   setTile(x, y, tile, mask = false) {
-    if (!this.checkTile(x, y, mask)) {
+    if (!checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
       return false;
     } else {
       this.tiles[y][x] = tile;
       return true;
     }
-  }
-
-  /**
-   * Returns whether a tile is legal and optionally whether it is in the mask
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {string[]} mask - tile types that are allowed
-   * @returns {boolean} - whether the tile is legal and allowed by the mask
-   */
-  checkTile(x, y, mask) {
-    if (!legal(x, y, this.rows, this.cols)) return false;
-    if (!mask) return true;
-    return mask.includes(getTile(x, y, this.tiles));
   }
 
   /**
@@ -183,7 +170,7 @@ class World {
    * @returns {boolean} - whether the tiles were swapped
    */
   swapTiles(x, y, a, b, mask = false) {
-    if (!this.checkTile(a, b, mask)) {
+    if (!checkTile(a, b, mask, this.rows, this.cols, this.tiles)) {
       return false;
     } else {
       const t1 = getTile(x, y, this.tiles);
@@ -226,7 +213,9 @@ class World {
       centerX + radius,
       centerY + radius,
       function (x, y) {
-        if (mask.length && !me.checkTile(x, y, mask)) return;
+        if (mask.length && !checkTile(x, y, mask, me.rows, me.cols, me.tiles)) {
+          return;
+        }
         if (!pointWithinRadius(centerX, centerY, x, y, radius)) return;
         me.setTile(x, y, tile);
       },
@@ -245,7 +234,9 @@ class World {
   fillRectangle(minX, minY, maxX, maxY, tile, mask = []) {
     const me = this;
     this.forEachTile(minX, minY, maxX, maxY, function (x, y) {
-      if (mask.length && !me.checkTile(x, y, mask)) return;
+      if (mask.length && !me.checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
+        return;
+      }
       me.setTile(x, y, tile);
     });
   }
