@@ -359,15 +359,20 @@ class Worldlogic {
     if (Math.random() <= QUEEN_SPEED) {
       // when few fungus nearby, move randomly
       if (this._touching(world, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
-        return this._moveRandom(world, x, y, WALK_MASK);
+        world.tiles = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
+        return;
       }
       // when touching fungus, converts one to egg, else move any direction towards closest fungus
       const tileLaid = Math.random() <= EGG_LAY_PROB ? "EGG" : "AIR";
-      return (
-        this._setOneTouching(world, x, y, tileLaid, ["FUNGUS"]) ||
-        this._searchForTile(world, x, y, ["FUNGUS"], QUEEN_RANGE, WALK_MASK) ||
-        this._moveRandom(world, x, y, WALK_MASK) // unreachable target
-      );
+
+      const sotRes = this._setOneTouching(world, x, y, tileLaid, ["FUNGUS"]);
+      if (sotRes) return sotRes;
+
+      const sftRes = this._searchForTile(world, x, y, ["FUNGUS"], QUEEN_RANGE, WALK_MASK);
+      if (sftRes) return sftRes;
+
+      const mrRes = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
+      if (mrRes) return mrRes;
     }
     return false;
   }
@@ -392,7 +397,7 @@ class Worldlogic {
     }
 
     // move randomly
-    return this._moveRandom(world, x, y, WALK_MASK, PUSH_MASK);
+    return moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK, PUSH_MASK);
   }
 
   /**
@@ -428,7 +433,7 @@ class Worldlogic {
     }
     // move randomly
     // Note: random movement uses a reduced tileset to avoid helping farm
-    return this._moveRandom(world, x, y, ROAM_MASK);
+    return moveRandom(world.rows, world.cols, world.tiles, x, y, ROAM_MASK);
   }
 
   /**
@@ -570,48 +575,6 @@ class Worldlogic {
       return tileSet.change;
     }
     return result;
-  }
-
-  /**
-   * Move in a random direction, switching places with the target tile
-   * or pushing the tile in front if possible
-   * @param {number} x - mover x coordinate
-   * @param {number} y - mover y coordinate
-   * @param {string[]} mask - tile types that can be swapped with
-   * @param {boolean} pushMask - tile types that can be pushed
-   * @returns {boolean} whether tiles were swapped
-   */
-  _moveRandom(world, x, y, mask, pushMask = false) {
-    // determine direction
-    const dx = randomIntInclusive(-1, 1);
-    const dy = randomIntInclusive(-1, 1);
-
-    // when moving into a pushable tile, swap the two tiles in front
-    if (pushMask && checkTile(x + dx, y + dy, pushMask, world.rows, world.cols, world.tiles)) {
-      // push less vertically than horizontally
-      swapTiles(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x + dx,
-        y + dy,
-        x + dx + dx,
-        y + dy,
-        mask,
-      );
-    }
-
-    // swap with tile in front
-    return swapTiles(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x,
-        y,
-        x + dx,
-        y + dy,
-        mask,
-      );
   }
 
   /**
