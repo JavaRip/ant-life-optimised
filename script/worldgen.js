@@ -178,7 +178,14 @@ class Worldgen {
     const plantProb = surfacePlantCount / 100;
     for (let x = 0; x < world.cols; x++) {
       if (Math.random() <= plantProb) {
-        world.setTile(x, _findSurfaceY(x, world) + 1, "PLANT");
+        world.tiles = setTile(
+          world.rows,
+          world.cols,
+          world.tiles,
+          x,
+          _findSurfaceY(x, world) + 1,
+          "PLANT",
+        ).tiles;
       }
     }
 
@@ -207,7 +214,14 @@ class Worldgen {
     );
 
     // Starting units
-    world.setTile(midX, surfaceY, "QUEEN");
+    world.tiles = setTile(
+      world.rows,
+      world.cols,
+      world.tiles,
+      midX,
+      surfaceY,
+      "QUEEN",
+    ).tiles;
 
     return world;
   }

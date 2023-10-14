@@ -86,25 +86,15 @@ class World {
     }
     for (let i = 0; i < realCount; i++) {
       const x = randomIntInclusive(0, this.cols - 1);
-      this.setTile(x, this.rows - 1, tile, ["AIR"]);
-    }
-  }
-
-  /**
-   * Replaces the tile at the given coordinates
-   * If set, mask will only allow the tile to be set if it is in the mask
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {string} tile - tile type to set
-   * @param {string[]} mask - tile types that are allowed to be replaced
-   * @returns {boolean} - whether the tile was set
-   */
-  setTile(x, y, tile, mask = false) {
-    if (!checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
-      return false;
-    } else {
-      this.tiles[y][x] = tile;
-      return true;
+      const tileSet = setTile(
+        this.rows,
+        this.cols,
+        this.tiles,
+        x,
+        this.rows - 1,
+        tile, ["AIR"],
+      );
+      world.tiles = tileSet.tiles;
     }
   }
 
@@ -175,8 +165,25 @@ class World {
     } else {
       const t1 = getTile(x, y, this.tiles);
       const t2 = getTile(a, b, this.tiles);
-      this.setTile(a, b, t1);
-      this.setTile(x, y, t2);
+
+      this.tiles = setTile(
+        this.rows,
+        this.cols,
+        this.tiles,
+        a,
+        b,
+        t1,
+      ).tiles;
+
+      this.tiles = setTile(
+        this.rows,
+        this.cols,
+        this.tiles,
+        x,
+        y,
+        t2,
+      ).tiles;
+
       return true;
     }
   }
@@ -203,7 +210,7 @@ class World {
           return;
         }
         if (!pointWithinRadius(centerX, centerY, x, y, radius)) return;
-        me.setTile(x, y, tile);
+        me.tiles = setTile(me.rows, me.cols, me.tiles, x, y, tile).tiles;
       },
     );
   }
@@ -223,7 +230,7 @@ class World {
       if (mask.length && !me.checkTile(x, y, mask, this.rows, this.cols, this.tiles)) {
         return;
       }
-      me.setTile(x, y, tile);
+      me.tiles = setTile(me.rows, me.cols, me.tiles, x, y, tile).tiles;
     });
   }
 

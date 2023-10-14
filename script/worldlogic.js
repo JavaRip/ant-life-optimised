@@ -89,7 +89,9 @@ class Worldlogic {
   _corpseAction(world, x, y) {
     // when touching plant, convert to plant
     if (Math.random() <= CONVERT_PROB * this._touching(world, x, y, ["PLANT"])) {
-      return world.setTile(x, y, "PLANT");
+      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "PLANT");
+      world.tiles = tileSet.tiles;
+      return tileSet.change;
     }
 
     // move down or diagonally down
@@ -112,7 +114,9 @@ class Worldlogic {
       Math.random() <= KILL_PROB &&
       this._setOneTouching(world, x, y, "CORPSE", WATER_KILL_MASK)
     ) {
-      return world.setTile(x, y, "AIR");
+      const tileSet = world.setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
+      world.tiles = tileSet.tiles;
+      return tileSet.change;
     }
 
     // chance to evaporate under sky or if air to left/right or near plant
@@ -123,7 +127,9 @@ class Worldlogic {
         checkTile(x + 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
         this._touching(world, x, y, ["PLANT"], world.rows, world.cols, world.tiles))
     ) {
-      return world.setTile(x, y, "AIR");
+      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
+      world.tiles = tileSet.tiles;
+      return tileSet.change;
     }
 
     // move down or diagonally down or sideways
@@ -157,11 +163,40 @@ class Worldlogic {
     ) {
       const bias = randomSign();
       const bias2 = randomSign();
-      return (
-        world.setTile(x, y + bias2, "PLANT", PLANT_GROW_MASK) ||
-        world.setTile(x + bias, y + bias2, "PLANT", PLANT_GROW_MASK)
-        // world.setTile(x + bias, y, "PLANT", PLANT_GROW_MASK) ||
+
+      const tileSetOne = setTile(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        y + bias2,
+        "PLANT",
+        PLANT_GROW_MASK
       );
+
+      world.tiles = tileSetOne.tiles;
+
+      const tileSetTwo = setTile(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x + bias,
+        y + bias2,
+        "PLANT",
+        PLANT_GROW_MASK,
+      )
+
+      world.tiles = tileSetTwo.tiles;
+
+      return (
+        tileSetOne.change ||
+        tileSetTwo.change
+      )
+      // return (
+      //   world.setTile(x, y + bias2, "PLANT", PLANT_GROW_MASK) ||
+      //   world.setTile(x + bias, y + bias2, "PLANT", PLANT_GROW_MASK)
+      //   // world.setTile(x + bias, y, "PLANT", PLANT_GROW_MASK) ||
+      // );
     }
     return;
   }
@@ -246,7 +281,9 @@ class Worldlogic {
   _pestAction(world, x, y) {
     // Destroyed by workers
     if (Math.random() <= KILL_PROB * this._touching(world, x, y, ["WORKER"])) {
-      return world.setTile(x, y, "CORPSE");
+      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "CORPSE");
+      world.tiles = tileSet.tiles
+      return tileSet.change
     }
 
     // Fight workers, queens, eggs
@@ -280,11 +317,14 @@ class Worldlogic {
     // chance to hatch, else move down or diagonally down
     if (Math.random() <= EGG_HATCH_PROB) {
       // hatch into QUEEN or WORKER
-      world.setTile(
+      world.tiles = setTile(
+        world.rows,
+        world.cols,
+        world.tiles,
         x,
         y,
         Math.random() < EGG_QUEEN_PROB ? "QUEEN" : "WORKER",
-      );
+      ).tiles;
       world.ants++;
       return true;
     }
@@ -339,7 +379,9 @@ class Worldlogic {
       checkTile(x, y, ["TRAIL"], world.rows, world.cols, world.tiles) && // check not consumed
       this._touching(world, x, y, ["AIR", "TRAIL"]) < 8
     ) {
-      return world.setTile(x, y, "AIR");
+      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
+      world.tiles = tileSet.tiles;
+      return tileSet.change;
     }
     return result;
   }
@@ -436,7 +478,16 @@ class Worldlogic {
     const targets = this._touchingWhich(world, x, y, mask);
     if (targets.length) {
       const target = targets[randomIntInclusive(0, targets.length - 1)];
-      return world.setTile(target.a, target.b, tile);
+      const tileSet = setTile(
+        world.rows,
+        world.cols,
+        world.tiles,
+        target.a,
+        target.b,
+        tile,
+      );
+      world.tiles = tileSet.tiles;
+      return tileSet.change;
     }
     return false;
   }
