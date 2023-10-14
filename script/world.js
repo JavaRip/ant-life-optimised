@@ -111,7 +111,7 @@ class World {
     if (!legal(x, y, this.rows, this.cols)) return false;
     if (!mask) return true;
     if (!threshold) return true;
-    const chunks = this._getChunks(x, y, distance);
+    const chunks = getChunks(CHUNK_SIZE, this.chunks, x, y, distance);
     let total = 0;
     for (let chunk of chunks) {
       for (let tile of mask) {
@@ -120,34 +120,6 @@ class World {
       }
     }
     return false;
-  }
-
-  /**
-   * Returns chunks within a given distance of a tile
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {number} distance - distance from tile to check
-   * @returns {object[]} - chunks within distance of tile
-   */
-  _getChunks(x, y, distance) {
-    const cxMin = Math.max(0, Math.floor((x - distance) / CHUNK_SIZE));
-    const cyMin = Math.max(0, Math.floor((y - distance) / CHUNK_SIZE));
-    const cxMax = Math.min(
-      this.chunks[0].length - 1,
-      Math.floor((x + distance) / CHUNK_SIZE),
-    );
-    const cyMax = Math.min(
-      this.chunks.length - 1,
-      Math.floor((y + distance) / CHUNK_SIZE),
-    );
-
-    let matches = [];
-    for (let cx = cxMin; cx <= cxMax; cx++) {
-      for (let cy = cyMin; cy <= cyMax; cy++) {
-        matches.push(this.chunks[cy][cx]);
-      }
-    }
-    return matches;
   }
 
   /**
