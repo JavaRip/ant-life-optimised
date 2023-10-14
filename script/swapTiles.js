@@ -8,8 +8,9 @@
  * @returns {boolean} - whether the tiles were swapped
  */
 function swapTiles(rows, cols, tilesIn, x, y, a, b, mask = false) {
+  const tiles = [...tilesIn];
   if (!checkTile(a, b, mask, rows, cols, tilesIn)) {
-    return false;
+    return tiles;
   } else {
     const t1 = getTile(x, y, tilesIn);
     const t2 = getTile(a, b, tilesIn);
