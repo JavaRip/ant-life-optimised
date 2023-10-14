@@ -22,18 +22,18 @@ function moveRandom(rows, cols, tilesIn, x, y, mask, pushMask = false) {
     // push less vertically than horizontally
     newTiles = swapTiles(rows, cols, tiles, x + dx, y + dy, x + dx + dx, y + dy, mask);
   } else {
-    newTiles = tiles;
+    newTiles = { tiles: tiles };
   }
 
   // swap with tile in front
   return swapTiles(
     rows,
     cols,
-    newTiles,
+    newTiles.tiles,
     x,
     y,
     x + dx,
     y + dy,
     mask,
-  );
+  ).tiles;
 }
