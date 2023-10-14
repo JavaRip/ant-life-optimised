@@ -652,7 +652,19 @@ class Worldlogic {
   _touchingWhich(world, x, y, mask, radius = 1) {
     // If no chunks in range contain target, skip searching
     const threshold = checkTile(x, y, mask, world.rows, world.cols, world.tiles) ? 2 : 1;
-    if (!world.checkChunks(x, y, mask, radius, threshold)) return [];
+    if (!checkChunks(
+      world.rows,
+      world.cols,
+      CHUNK_SIZE,
+      world.chunks,
+      x,
+      y,
+      mask,
+      radius,
+      threshold
+    )) {
+      return [];
+    }
 
     const touching = [];
     forEachTile(
@@ -708,7 +720,18 @@ class Worldlogic {
    */
   _searchForTile(world, x, y, targetMask, radius, walkableMask = ["AIR"]) {
     // If no chunks in range contain target, skip searching
-    if (!world.checkChunks(x, y, targetMask, radius)) return false;
+    if (!checkChunks(
+      world.rows,
+      world.cols,
+      CHUNK_SIZE,
+      world.chunks,
+      x,
+      y,
+      targetMask,
+      radius
+    )) {
+      return false;
+    }
 
     for (let r = 1; r <= radius; r++) {
       for (let dx = -r; dx <= r; dx++) {
