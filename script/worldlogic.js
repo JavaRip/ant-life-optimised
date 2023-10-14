@@ -168,7 +168,7 @@ class Worldlogic {
       Math.random() <= KILL_PROB &&
       this._setOneTouching(world, x, y, "CORPSE", WATER_KILL_MASK)
     ) {
-      const tileSet = world.setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
+      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
       world.tiles = tileSet.tiles;
       return tileSet.change;
     }
@@ -497,7 +497,7 @@ class Worldlogic {
     // when unsupported on all sides, move down but don't stack
     if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
       if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
-        world.setTile(x, y, "AIR");
+        setTile(x, y, "AIR");
       } else {
         swapTiles(
         world.rows,
