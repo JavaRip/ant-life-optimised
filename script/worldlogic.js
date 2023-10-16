@@ -44,24 +44,30 @@ class Worldlogic {
    * @returns {boolean} - Whether the tile performed an action
    */
   _doTileAction(world, x, y) {
-    const actions = {
-      SAND: this._sandAction,
-      CORPSE: this._corpseAction,
-      WATER: this._waterAction,
-      PLANT: this._plantAction,
-      FUNGUS: this._fungusAction,
-      QUEEN: this._queenAction,
-      WORKER: this._workerAction,
-      PEST: this._pestAction,
-      EGG: this._eggAction,
-      TRAIL: this._trailAction,
-    };
-
     const tile = getTile(x, y, world.tiles);
-    if (actions.hasOwnProperty(tile)) {
-      return actions[tile].call(this, world, x, y);
-    } else {
-      return false;
+    switch (tile) {
+      case 'SAND':
+        return this._sandAction(world, x, y);
+      case 'CORPSE':
+        return this._corpseAction(world, x, y);
+      case 'WATER':
+        return this._waterAction(world, x, y);
+      case 'PLANT':
+        return this._plantAction(world, x, y);
+      case 'FUNGUS':
+        return this._fungusAction(world, x, y);
+      case 'QUEEN':
+        return this._queenAction(world, x, y);
+      case 'WORKER':
+        return this._workerAction(world, x, y);
+      case 'PEST':
+        return this._pestAction(world, x, y);
+      case 'EGG':
+        return this._eggAction(world, x, y);
+      case 'TRAIL':
+        return this._trailAction(world, x, y);
+      default:
+        return false;
     }
   }
 
