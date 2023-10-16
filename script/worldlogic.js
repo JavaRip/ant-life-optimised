@@ -47,9 +47,13 @@ class Worldlogic {
     const tile = getTile(x, y, world.tiles);
     switch (tile) {
       case 'SAND':
-        return this._sandAction(world, x, y);
+        return sandAction(world.rows, world.cols, world.tiles, x, y);
       case 'CORPSE':
-        return this._corpseAction(world, x, y);
+        const update = corpseAction(world.rows, world.cols, world.tiles, x, y);
+        if (update.change) {
+          world.tiles = update.tiles;
+        }
+        return update.change;
       case 'WATER':
         return this._waterAction(world, x, y);
       case 'PLANT':
@@ -69,48 +73,6 @@ class Worldlogic {
       default:
         return false;
     }
-  }
-
-  /**
-   * Performs the action for a SAND tile
-   * SAND falls down and to the side
-   * @param {number} x - X coordinate of tile
-   * @param {number} y - Y coordinate of tile
-   * @returns {boolean} - Whether the tile performed an action
-   */
-  _sandAction(world, x, y) {
-    // move down or diagonally down
-    const bias = randomSign();
-    const swapResOne = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1, ["AIR", "WATER"]);
-    if (swapResOne.changed) return swapResOne.tiles;
-
-    const swapResTwo = swapTiles(world.rows, world.cols, world.tiles, x, y, x + bias, y - 1, ["AIR", "WATER"]);
-    if (swapResTwo.changed) return swapResTwo.tiles;
-
-    return swapTiles(world.rows, world.cols, world.tiles, x, y, x - bias, y - 1, ["AIR", "WATER"]).tiles;
-  }
-
-  /**
-   * Performs the action for a CORPSE tile
-   * CORPSE falls down and to the side and has a chance to be converted by adjacent PLANT tiles
-   */
-  _corpseAction(world, x, y) {
-    // when touching plant, convert to plant
-    if (Math.random() <= CONVERT_PROB * this._touching(world, x, y, ["PLANT"])) {
-      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "PLANT");
-      world.tiles = tileSet.tiles;
-      return tileSet.change;
-    }
-
-    // move down or diagonally down
-    const bias = randomSign();
-    const swapResOne = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1, ["AIR"]);
-    if (swapResOne.changed) return swapResOne.tiles;
-
-    const swapResTwo = swapTiles(world.rows, world.cols, world.tiles, x, y, x - bias, y - 1, ["AIR"]);
-    if (swapResTwo.changed) return swapResTwo.tiles;
-
-    return swapTiles(world.rows, world.cols, world.tiles, x, y, x + bias, y - 1, ["AIR"]).tiles;
   }
 
   /**
