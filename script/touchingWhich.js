@@ -6,7 +6,7 @@
  * @param {number} radius - radius to check (1 means only adjacent tiles)
  * @returns {object[]} list of matching tiles in reach as {x, y} objects
  */
-function touchingWhich(rows, cols, tiles, chunks, chunkSize , x, y, mask, radius = 1) {
+function touchingWhich(rows, cols, tiles, chunks, chunkSize, x, y, mask, radius = 1) {
   // If no chunks in range contain target, skip searching
   const threshold = checkTile(x, y, mask, rows, cols, tiles) ? 2 : 1;
   if (!checkChunks(

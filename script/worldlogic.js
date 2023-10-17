@@ -159,7 +159,7 @@ class Worldlogic {
 
     if (Math.random() <= QUEEN_SPEED) {
       // when few fungus nearby, move randomly
-      if (touching(world, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
+      if (touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
         world.tiles = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
         return;
       }
@@ -334,7 +334,7 @@ class Worldlogic {
     }
 
     // find a worker to draw
-    const targets = touchingWhich(world, x, y, ["WORKER"], WORKER_RANGE);
+    const targets = touchingWhich(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["WORKER"], WORKER_RANGE);
     if (!targets.length) {
       result = false;
     } else {
