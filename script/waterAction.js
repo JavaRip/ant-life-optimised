@@ -3,11 +3,11 @@
  * WATER falls down and to the side, evaporates under sky or if air to
  * left/right or near plant, and kills neighbouring creatures
  */
-function waterAction(world, rows, cols, tiles, x, y) {
+function waterAction(rows, cols, tiles, x, y) {
   // chance to kill neighbouring creatures
   if (
     Math.random() <= KILL_PROB &&
-    this._setOneTouching(world, x, y, "CORPSE", WATER_KILL_MASK)
+    setOneTouching(x, y, "CORPSE", WATER_KILL_MASK)
   ) {
     return setTile(rows, cols, tiles, x, y, "AIR");
   }
@@ -20,7 +20,7 @@ function waterAction(world, rows, cols, tiles, x, y) {
       checkTile(x + 1, y, ["AIR"], rows, cols, tiles) ||
 
       // TODO refactor touching before implementing this
-      this._touching(world, x, y, ["PLANT"], rows, cols, tiles))
+      touching(x, y, ["PLANT"], rows, cols, tiles))
   ) {
     return setTile(rows, cols, tiles, x, y, "AIR");
   }

@@ -59,9 +59,27 @@ class Worldlogic {
         }
         return corpseUpdate.change;
       case 'WATER':
-        return this._waterAction(world, x, y);
+        const waterUpdate = waterAction(world.rows, world.cols, world.tiles, x, y);
+        if (waterUpdate.change) {
+          world.tiles = waterUpdate.tiles;
+        }
+        return waterUpdate.change;
       case 'PLANT':
-        return this._plantAction(world, x, y);
+        const plantUpdate = plantAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          CHUNK_SIZE,
+          GROW_PROB,
+          PLANT_GROW_MASK,
+          x,
+          y,
+        );
+        if (plantUpdate.change) {
+          world.tiles = plantUpdate.tiles;
+        }
+        return plantUpdate.change;
       case 'FUNGUS':
         return this._fungusAction(world, x, y);
       case 'QUEEN':
@@ -77,115 +95,6 @@ class Worldlogic {
       default:
         return false;
     }
-  }
-
-  /**
-   * Performs the action for a WATER tile
-   * WATER falls down and to the side, evaporates under sky or if air to
-   * left/right or near plant, and kills neighbouring creatures
-   */
-  _waterAction(world, x, y) {
-    // chance to kill neighbouring creatures
-    if (
-      Math.random() <= KILL_PROB &&
-      setOneTouching(
-        world,
-        x,
-        y,
-        "CORPSE",
-        WATER_KILL_MASK,
-      )
-    ) {
-      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
-      world.tiles = tileSet.tiles;
-      return tileSet.change;
-    }
-
-    // chance to evaporate under sky or if air to left/right or near plant
-    if (
-      Math.random() <= EVAPORATE_PROB &&
-      (exposedToSky(world.rows, world.cols, world.tiles, x, y) ||
-        checkTile(x - 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
-        checkTile(x + 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
-        touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["PLANT"]))
-    ) {
-      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
-      world.tiles = tileSet.tiles;
-      return tileSet.change;
-    }
-
-    // move down or diagonally down or sideways
-    const bias = randomSign();
-    const swapResOne = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1, ["AIR", "CORPSE"]);
-    if (swapResOne.changed) return swapResOne.tiles;
-
-    const swapResTwo = swapTiles(world.rows, world.cols, world.tiles, x, y, x + bias, y - 1, ["AIR", "CORPSE"]);
-    if (swapResTwo.changed) return swapResTwo.tiles;
-
-    const swapResThree = swapTiles(world.rows, world.cols, world.tiles, x, y, x - bias, y - 1, ["AIR", "CORPSE"])
-    if (swapResThree.changed) return swapResThree.tiles;
-
-    return swapTiles(world.rows, world.cols, world.tiles, x, y, x + bias, y, ["AIR", "CORPSE"]).tiles;
-  }
-
-  /**
-   * Performs the action for a PLANT tile
-   * PLANT falls down when unsupported by adjacent PLANT tiles and has a chance to grow
-   * Growth is less likely when touching other PLANT or FUNGUS tiles so they form narrow stems
-   */
-  _plantAction(world, x, y) {
-    // when unsupported, move down
-    if (
-      checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
-      touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["PLANT"]) < 2
-    ) {
-      const swapRes = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1);
-      world.tiles = swapRes.tiles;
-    }
-
-    // chance to grow up/down or left/right or diagonal, reduced by nearby plant/fungus
-    if (
-      Math.random() <=
-      GROW_PROB / (touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["PLANT", "FUNGUS"], 3) ** 2 + 1)
-    ) {
-      const bias = randomSign();
-      const bias2 = randomSign();
-
-      const tileSetOne = setTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x,
-        y + bias2,
-        "PLANT",
-        PLANT_GROW_MASK
-      );
-
-      world.tiles = tileSetOne.tiles;
-
-      const tileSetTwo = setTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x + bias,
-        y + bias2,
-        "PLANT",
-        PLANT_GROW_MASK,
-      )
-
-      world.tiles = tileSetTwo.tiles;
-
-      return (
-        tileSetOne.change ||
-        tileSetTwo.change
-      )
-      // return (
-      //   world.setTile(x, y + bias2, "PLANT", PLANT_GROW_MASK) ||
-      //   world.setTile(x + bias, y + bias2, "PLANT", PLANT_GROW_MASK)
-      //   // world.setTile(x + bias, y, "PLANT", PLANT_GROW_MASK) ||
-      // );
-    }
-    return;
   }
 
   /**
