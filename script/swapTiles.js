@@ -10,7 +10,7 @@
 function swapTiles(rows, cols, tilesIn, x, y, a, b, mask = false) {
   const tiles = [...tilesIn];
   if (!checkTile(a, b, mask, rows, cols, tilesIn)) {
-    return { tiles: tiles, changed: false }; // TODO return {tiles, false}
+    return { tiles: tiles, changed: false };
   } else {
     const t1 = getTile(x, y, tilesIn);
     const t2 = getTile(a, b, tilesIn);

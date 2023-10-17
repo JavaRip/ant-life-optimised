@@ -177,7 +177,7 @@ class Worldlogic {
           y,
         );
       case 'TRAIL':
-        const trailUpdate = this._trailAction(
+        const trailUpdate = trailAction(
           world.rows,
           world.cols,
           world.tiles,
