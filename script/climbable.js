@@ -4,9 +4,9 @@
  * @param {number} y - y coordinate
  * @returns {boolean} whether the tile is climbable
  */
-function climbable(rows, cols, tiles, x, y, world, chunkSize) {
+function climbable(rows, cols, tiles, chunks, x, y, chunkSize) {
   return (
     !checkTile(x, y - 1, ["AIR", "TRAIL"], rows, cols, tiles) ||
-    touching(world.rows, world.cols, world.tiles, world.chunks, chunkSize, x, y, CLIMB_MASK) > 0
+    touching(rows, cols, tiles, chunks, chunkSize, x, y, CLIMB_MASK) > 0
   );
 }

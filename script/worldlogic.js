@@ -96,10 +96,29 @@ class Worldlogic {
         if (fungusUpdate.change) {
           world.tiles = fungusUpdate.tiles;
         }
-        return fungusUpdate.change;
 
+        return fungusUpdate.change;
       case 'QUEEN':
-        return this._queenAction(world, x, y);
+        const queenUpdate = queenAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          CHUNK_SIZE,
+          QUEEN_SPEED,
+          QUEEN_RANGE,
+          QUEEN_FUNGUS_MIN,
+          WALK_MASK,
+          EGG_LAY_PROB,
+          x,
+          y,
+        );
+
+        if (queenUpdate.change) {
+          world.tiles = queenUpdate.tiles;
+        }
+
+        return queenUpdate.change;
       case 'WORKER':
         return this._workerAction(world, x, y);
       case 'PEST':
@@ -113,70 +132,6 @@ class Worldlogic {
     }
   }
 
-
-  /**
-   * Performs the action for a QUEEN tile
-   * QUEEN falls down when unable to climb. When few FUNGUS tiles are nearby,
-   * QUEEN moves randomly. When adjacent to FUNGUS QUEEN converts it to EGG.
-   * Otherwise QUEEN moves towards closest FUNGUS if any are in range. QUEEN
-   * will not convert FUNGUS if there are too few nearby to avoid extinction.
-   */
-  _queenAction(world, x, y) {
-    // when unsupported on all sides, move down
-    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, CHUNK_SIZE)) {
-      world.tiles = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1).tiles;
-      return;
-    }
-
-    if (Math.random() <= QUEEN_SPEED) {
-      // when few fungus nearby, move randomly
-      if (touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
-        world.tiles = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
-        return;
-      }
-      // when touching fungus, converts one to egg, else move any direction towards closest fungus
-      const tileLaid = Math.random() <= EGG_LAY_PROB ? "EGG" : "AIR";
-
-      const sotRes = setOneTouching(
-        world.rows,
-        world.cols,
-        world.tiles,
-        world.chunks,
-        CHUNK_SIZE,
-        x,
-        y,
-        tileLaid,
-        ["FUNGUS"],
-      );
-      if (sotRes.changed) {
-        return sotRes.tiles;
-      }
-
-      const sftRes = searchForTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        world.chunks,
-        CHUNK_SIZE,
-        x,
-        y,
-        ["FUNGUS"],
-        QUEEN_RANGE,
-        WALK_MASK
-      );
-
-      if (sftRes.changed) {
-        return sftRes.tiles;
-      }
-
-      const mrRes = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
-      if (mrRes.changed) {
-        return mrRes.tiles;
-      }
-    }
-    return false;
-  }
-
   /**
    * Performs the action for a WORKER tile
    * WORKER falls down when unable to climb and moves randomly.
@@ -184,7 +139,7 @@ class Worldlogic {
    */
   _workerAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, CHUNK_SIZE)) {
+    if (!climbable(world.rows, world.cols, world.tiles, world.chunks, x, y, CHUNK_SIZE)) {
       return swapTiles(
         world.rows,
         world.cols,
@@ -296,7 +251,7 @@ class Worldlogic {
     let result = false;
 
     // when unsupported on all sides, move down but don't stack
-    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, CHUNK_SIZE)) {
+    if (!climbable(world.rows, world.cols, world.tiles, world.chunks, x, y, CHUNK_SIZE)) {
       if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
         setTile(x, y, "AIR");
       } else {
@@ -316,7 +271,7 @@ class Worldlogic {
       const desiredA = a + Math.sign(x - a);
       const desiredB = b + Math.sign(y - b);
 
-      const climb = climbable(world.rows, world.cols, world.tiles, a, b, world, CHUNK_SIZE);
+      const climb = climbable(world.rows, world.cols, world.tiles, world.chunks, a, b, CHUNK_SIZE);
 
       const swapResOne = swapTiles(world.rows, world.cols, world.tiles, a, b, desiredA, desiredB, WALK_MASK);
       if (swapResOne.changed) {
