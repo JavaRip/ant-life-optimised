@@ -47,13 +47,17 @@ class Worldlogic {
     const tile = getTile(x, y, world.tiles);
     switch (tile) {
       case 'SAND':
-        return sandAction(world.rows, world.cols, world.tiles, x, y);
-      case 'CORPSE':
-        const update = corpseAction(world.rows, world.cols, world.tiles, x, y);
-        if (update.change) {
-          world.tiles = update.tiles;
+        const sandUpdate = sandAction(world.rows, world.cols, world.tiles, x, y);
+        if (sandUpdate.change) {
+          world.tiles = sandUpdate.tiles;
         }
-        return update.change;
+        return sandUpdate.change;
+      case 'CORPSE':
+        const corpseUpdate = corpseAction(world.rows, world.cols, world.tiles, x, y);
+        if (corpseUpdate.change) {
+          world.tiles = corpseUpdate.tiles;
+        }
+        return corpseUpdate.change;
       case 'WATER':
         return this._waterAction(world, x, y);
       case 'PLANT':
@@ -379,7 +383,7 @@ class Worldlogic {
     }
 
     // find a worker to draw
-    const targets = this._touchingWhich(world, x, y, ["WORKER"], WORKER_RANGE);
+    const targets = touchingWhich(world, x, y, ["WORKER"], WORKER_RANGE);
     if (!targets.length) {
       result = false;
     } else {
@@ -431,48 +435,17 @@ class Worldlogic {
    * @returns {boolean} the number of matching tiles in reach
    */
   _touching(world, x, y, mask, radius = 1) {
-    return this._touchingWhich(world, x, y, mask, radius).length;
-  }
-
-  /**
-   * Returns the tiles matching the mask that are in reach
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {string[]} mask - tile types to check for
-   * @param {number} radius - radius to check (1 means only adjacent tiles)
-   * @returns {object[]} list of matching tiles in reach as {x, y} objects
-   */
-  _touchingWhich(world, x, y, mask, radius = 1) {
-    // If no chunks in range contain target, skip searching
-    const threshold = checkTile(x, y, mask, world.rows, world.cols, world.tiles) ? 2 : 1;
-    if (!checkChunks(
+    return touchingWhich(
       world.rows,
       world.cols,
-      CHUNK_SIZE,
+      world.tiles,
       world.chunks,
+      CHUNK_SIZE,
       x,
       y,
       mask,
       radius,
-      threshold
-    )) {
-      return [];
-    }
-
-    const touching = [];
-    forEachTile(
-      world.rows,
-      world.cols,
-      x - radius,
-      y - radius,
-      x + radius,
-      y + radius,
-      function (a, b) {
-        if (checkTile(a, b, mask, world.rows, world.cols, world.tiles) && (a !== x || b !== y))
-          touching.push({ a, b });
-      },
-    );
-    return touching;
+    ).length;
   }
 
   /**
@@ -484,7 +457,7 @@ class Worldlogic {
    * @returns {boolean} whether a tile was replaced
    */
   _setOneTouching(world, x, y, tile, mask) {
-    const targets = this._touchingWhich(world, x, y, mask);
+    const targets = touchingWhich(world, x, y, mask);
     if (targets.length) {
       const target = targets[randomIntInclusive(0, targets.length - 1)];
       const tileSet = setTile(

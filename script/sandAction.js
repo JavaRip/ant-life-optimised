@@ -13,7 +13,7 @@ function sandAction(rows, cols, tiles, x, y) {
   );
 
   if (swapResOne.changed) {
-    return swapResOne.tiles;
+    return swapResOne;
   }
 
   const swapResTwo = swapTiles(
@@ -28,7 +28,7 @@ function sandAction(rows, cols, tiles, x, y) {
   );
 
   if (swapResTwo.changed) {
-    return swapResTwo.tiles;
+    return swapResTwo;
   }
 
   return swapTiles(
@@ -40,5 +40,5 @@ function sandAction(rows, cols, tiles, x, y) {
     x - bias,
     y - 1,
     ["AIR", "WATER"]
-  ).tiles;
+  );
 }
