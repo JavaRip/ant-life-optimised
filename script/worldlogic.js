@@ -48,21 +48,27 @@ class Worldlogic {
     switch (tile) {
       case 'SAND':
         const sandUpdate = sandAction(world.rows, world.cols, world.tiles, x, y);
+
         if (sandUpdate.change) {
           world.tiles = sandUpdate.tiles;
         }
+
         return sandUpdate.change;
       case 'CORPSE':
         const corpseUpdate = corpseAction(world.rows, world.cols, world.chunks, CHUNK_SIZE, world.tiles, x, y);
+
         if (corpseUpdate.change) {
           world.tiles = corpseUpdate.tiles;
         }
+
         return corpseUpdate.change;
       case 'WATER':
         const waterUpdate = waterAction(world.rows, world.cols, world.tiles, x, y);
+
         if (waterUpdate.change) {
           world.tiles = waterUpdate.tiles;
         }
+
         return waterUpdate.change;
       case 'PLANT':
         const plantUpdate = plantAction(
@@ -76,9 +82,11 @@ class Worldlogic {
           x,
           y,
         );
+
         if (plantUpdate.change) {
           world.tiles = plantUpdate.tiles;
         }
+
         return plantUpdate.change;
       case 'FUNGUS':
         const fungusUpdate = fungusAction(
@@ -159,41 +167,20 @@ class Worldlogic {
 
         return pestUpdate.change;
       case 'EGG':
-        return this._eggAction(world, x, y);
+        return eggAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          EGG_HATCH_PROB,
+          EGG_QUEEN_PROB,
+          x,
+          y
+        );
       case 'TRAIL':
         return this._trailAction(world, x, y);
       default:
         return false;
     }
-  }
-
-  /**
-   * Performs the action for an EGG tile
-   * EGG falls down and to the side and has a chance to hatch into a QUEEN or WORKER.
-   */
-  _eggAction(world, x, y) {
-    // chance to hatch, else move down or diagonally down
-    if (Math.random() <= EGG_HATCH_PROB) {
-      // hatch into QUEEN or WORKER
-      world.tiles = setTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x,
-        y,
-        Math.random() < EGG_QUEEN_PROB ? "QUEEN" : "WORKER",
-      ).tiles;
-      world.ants++;
-      return true;
-    }
-    const bias = randomSign();
-    const swapResOne = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1, ["AIR", "WATER"]);
-    if (swapResOne.changed) return swapResOne.tiles;
-
-    const swapResTwo = swapTiles(world.rows, world.cols, world.tiles, x, y, x - bias, y - 1, ["AIR", "WATER"])
-    if (swapResTwo.changed) return swapResTwo.tiles;
-
-    return swapTiles(world.rows, world.cols, world.tiles, x, y, x + bias, y - 1, ["AIR", "WATER"])
   }
 
   /**
