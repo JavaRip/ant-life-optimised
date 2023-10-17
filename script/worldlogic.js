@@ -174,10 +174,26 @@ class Worldlogic {
           EGG_HATCH_PROB,
           EGG_QUEEN_PROB,
           x,
-          y
+          y,
         );
       case 'TRAIL':
-        return this._trailAction(world, x, y);
+        const trailUpdate = this._trailAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          CHUNK_SIZE,
+          WORKER_RANGE,
+          WALK_MASK,
+          x,
+          y,
+        );
+
+        if (trailUpdate.changed) {
+          world.tiles = trailUpdate.tiles;
+        }
+
+        return trailUpdate.changed;
       default:
         return false;
     }
@@ -189,20 +205,20 @@ class Worldlogic {
    * TRAIL draws a random WORKER within range (if any) towards it. This is separate
    * from the WORKER action, so TRAIL lets WORKERs move faster than usual.
    */
-  _trailAction(world, x, y) {
+  _trailAction(rows, cols, tiles, chunks, chunkSize, workerRange, walkMask, x, y) {
     let result = false;
 
     // when unsupported on all sides, move down but don't stack
-    if (!climbable(world.rows, world.cols, world.tiles, world.chunks, x, y, CHUNK_SIZE)) {
-      if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
+    if (!climbable(rows, cols, tiles, chunks, x, y, chunkSize)) {
+      if (checkTile(x, y - 1, "TRAIL", rows, cols, tiles)) {
         setTile(x, y, "AIR");
       } else {
-        world.tiles = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1).tiles;
+        tiles = swapTiles(rows, cols, tiles, x, y, x, y - 1).tiles;
       }
     }
 
     // find a worker to draw
-    const targets = touchingWhich(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["WORKER"], WORKER_RANGE);
+    const targets = touchingWhich(rows, cols, tiles, chunks, chunkSize, x, y, ["WORKER"], workerRange);
     if (!targets.length) {
       result = false;
     } else {
@@ -213,19 +229,19 @@ class Worldlogic {
       const desiredA = a + Math.sign(x - a);
       const desiredB = b + Math.sign(y - b);
 
-      const climb = climbable(world.rows, world.cols, world.tiles, world.chunks, a, b, CHUNK_SIZE);
+      const climb = climbable(rows, cols, tiles, chunks, a, b, chunkSize);
 
-      const swapResOne = swapTiles(world.rows, world.cols, world.tiles, a, b, desiredA, desiredB, WALK_MASK);
+      const swapResOne = swapTiles(rows, cols, tiles, a, b, desiredA, desiredB, walkMask);
       if (swapResOne.changed) {
-        world.tiles = swapResOne.tiles;
+        tiles = swapResOne.tiles;
         result = climb && swapResOne.changed;
       } else {
-        const swapResTwo = swapTiles(world.rows, world.cols, world.tiles, a, b, a, desiredB, WALK_MASK);
+        const swapResTwo = swapTiles(rows, cols, tiles, a, b, a, desiredB, walkMask);
         if (swapResTwo.changed) {
-          world.tiles = swapResTwo.tiles;
+          tiles = swapResTwo.tiles;
           result = climb && swapResTwo.changed;
         } else {
-          const swapResThree = swapTiles(world.rows, world.cols, world.tiles, a, b, desiredA, b, WALK_MASK);
+          const swapResThree = swapTiles(rows, cols, tiles, a, b, desiredA, b, walkMask);
           result = climb && swapResThree.changed;
         }
       }
@@ -235,14 +251,12 @@ class Worldlogic {
     // Note: this is done after drawing workers so it works when touching a surface
     // however, this means we have to check that its not been consumed yet
     if (
-      checkTile(x, y, ["TRAIL"], world.rows, world.cols, world.tiles) && // check not consumed
-      touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["AIR", "TRAIL"]) < 8
+      checkTile(x, y, ["TRAIL"], rows, cols, tiles) && // check not consumed
+      touching(rows, cols, tiles, chunks, chunkSize, x, y, ["AIR", "TRAIL"]) < 8
     ) {
-      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
-      world.tiles = tileSet.tiles;
-      return tileSet.change;
+      return setTile(rows, cols, tiles, x, y, "AIR");
     }
-    return result;
+    return { tiles: tiles, changed: result };
   }
 
 }
