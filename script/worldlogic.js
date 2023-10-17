@@ -120,7 +120,23 @@ class Worldlogic {
 
         return queenUpdate.change;
       case 'WORKER':
-        return this._workerAction(world, x, y);
+        const workerUpdate = workerAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          CHUNK_SIZE,
+          WALK_MASK,
+          PUSH_MASK,
+          x,
+          y,
+        );
+
+        if (workerUpdate.change) {
+          world.tiles = workerUpdate.tiles;
+        }
+
+        return workerUpdate.change;
       case 'PEST':
         return this._pestAction(world, x, y);
       case 'EGG':
@@ -130,29 +146,6 @@ class Worldlogic {
       default:
         return false;
     }
-  }
-
-  /**
-   * Performs the action for a WORKER tile
-   * WORKER falls down when unable to climb and moves randomly.
-   * When moving randomly, WORKER will push adjacent tiles, spreading them around.
-   */
-  _workerAction(world, x, y) {
-    // when unsupported on all sides, move down
-    if (!climbable(world.rows, world.cols, world.tiles, world.chunks, x, y, CHUNK_SIZE)) {
-      return swapTiles(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x,
-        y,
-        x,
-        y - 1
-      );
-    }
-
-    // move randomly
-    return moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK, PUSH_MASK);
   }
 
   /**
