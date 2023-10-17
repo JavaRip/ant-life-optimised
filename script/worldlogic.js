@@ -88,7 +88,13 @@ class Worldlogic {
     // chance to kill neighbouring creatures
     if (
       Math.random() <= KILL_PROB &&
-      this._setOneTouching(world, x, y, "CORPSE", WATER_KILL_MASK)
+      setOneTouching(
+        world,
+        x,
+        y,
+        "CORPSE",
+        WATER_KILL_MASK,
+      )
     ) {
       const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
       world.tiles = tileSet.tiles;
@@ -101,7 +107,7 @@ class Worldlogic {
       (exposedToSky(world.rows, world.cols, world.tiles, x, y) ||
         checkTile(x - 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
         checkTile(x + 1, y, ["AIR"], world.rows, world.cols, world.tiles) ||
-        this._touching(world, x, y, ["PLANT"], world.rows, world.cols, world.tiles))
+        touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["PLANT"]))
     ) {
       const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
       world.tiles = tileSet.tiles;
@@ -131,7 +137,7 @@ class Worldlogic {
     // when unsupported, move down
     if (
       checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
-      this._touching(world, x, y, ["PLANT"]) < 2
+      touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["PLANT"]) < 2
     ) {
       const swapRes = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1);
       world.tiles = swapRes.tiles;
@@ -140,7 +146,7 @@ class Worldlogic {
     // chance to grow up/down or left/right or diagonal, reduced by nearby plant/fungus
     if (
       Math.random() <=
-      GROW_PROB / (this._touching(world, x, y, ["PLANT", "FUNGUS"], 3) ** 2 + 1)
+      GROW_PROB / (touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["PLANT", "FUNGUS"], 3) ** 2 + 1)
     ) {
       const bias = randomSign();
       const bias2 = randomSign();
@@ -195,7 +201,7 @@ class Worldlogic {
     // when unsupported, move down
     if (
       checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
-      this._touching(world, x, y, ["FUNGUS", "PLANT"]) < 2
+      touching(world.rows, world.cols, world.chunks, CHUNK_SIZE, x, y, ["FUNGUS", "PLANT"]) < 2
     ) {
       return swapTiles(
         world.rows,
@@ -204,13 +210,23 @@ class Worldlogic {
         x,
         y,
         x,
-        y - 1
+        y - 1,
       );
     }
 
     // When underground and touching plant, convert to fungus
     if (y < world.surfaceY && Math.random() <= CONVERT_PROB) {
-      if (this._setOneTouching(world, x, y, "FUNGUS", ["PLANT"])) {
+      if (setOneTouching(
+        world.rows,
+        world.cols,
+        world.tiles,
+        world.chunks,
+        CHUNK_SIZE,
+        x,
+        y,
+        "FUNGUS",
+        ["PLANT"],
+      )) {
         return true;
       }
     }
@@ -227,22 +243,34 @@ class Worldlogic {
    */
   _queenAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
+    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, CHUNK_SIZE)) {
       world.tiles = swapTiles(world.rows, world.cols, world.tiles, x, y, x, y - 1).tiles;
       return;
     }
 
     if (Math.random() <= QUEEN_SPEED) {
       // when few fungus nearby, move randomly
-      if (this._touching(world, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
+      if (touching(world, x, y, ["FUNGUS"], QUEEN_RANGE) < QUEEN_FUNGUS_MIN) {
         world.tiles = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
         return;
       }
       // when touching fungus, converts one to egg, else move any direction towards closest fungus
       const tileLaid = Math.random() <= EGG_LAY_PROB ? "EGG" : "AIR";
 
-      const sotRes = this._setOneTouching(world, x, y, tileLaid, ["FUNGUS"]);
-      if (sotRes) return sotRes;
+      const sotRes = setOneTouching(
+        world.rows,
+        world.cols,
+        world.tiles,
+        world.chunks,
+        CHUNK_SIZE,
+        x,
+        y,
+        tileLaid,
+        ["FUNGUS"],
+      );
+      if (sotRes.changed) {
+        return sotRes.tiles;
+      }
 
       const sftRes = searchForTile(
         world.rows,
@@ -257,10 +285,14 @@ class Worldlogic {
         WALK_MASK
       );
 
-      if (sftRes) return sftRes;
+      if (sftRes.changed) {
+        return sftRes.tiles;
+      }
 
       const mrRes = moveRandom(world.rows, world.cols, world.tiles, x, y, WALK_MASK);
-      if (mrRes) return mrRes;
+      if (mrRes.changed) {
+        return mrRes.tiles;
+      }
     }
     return false;
   }
@@ -272,7 +304,7 @@ class Worldlogic {
    */
   _workerAction(world, x, y) {
     // when unsupported on all sides, move down
-    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
+    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, CHUNK_SIZE)) {
       return swapTiles(
         world.rows,
         world.cols,
@@ -295,7 +327,7 @@ class Worldlogic {
    */
   _pestAction(world, x, y) {
     // Destroyed by workers
-    if (Math.random() <= KILL_PROB * this._touching(world, x, y, ["WORKER"])) {
+    if (Math.random() <= KILL_PROB * touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["WORKER"])) {
       const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "CORPSE");
       world.tiles = tileSet.tiles
       return tileSet.change
@@ -306,7 +338,17 @@ class Worldlogic {
     // Pests are hit by all neighbouring workers but only hit one worker per tick.
     // But pests have a higher base attack chance so typically win 1 on 1.
     if (Math.random() <= KILL_PROB * 2) {
-      if (this._setOneTouching(world, x, y, "CORPSE", PEST_TARGET_MASK)) {
+      if (setOneTouching(
+        world.rows,
+        world.cols,
+        world.tiles,
+        world.chunks,
+        CHUNK_SIZE,
+        x,
+        y,
+        "CORPSE",
+        PEST_TARGET_MASK,
+      )) {
         return true;
       }
     }
@@ -374,7 +416,7 @@ class Worldlogic {
     let result = false;
 
     // when unsupported on all sides, move down but don't stack
-    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, this)) {
+    if (!climbable(world.rows, world.cols, world.tiles, x, y, world, CHUNK_SIZE)) {
       if (checkTile(x, y - 1, "TRAIL", world.rows, world.cols, world.tiles)) {
         setTile(x, y, "AIR");
       } else {
@@ -394,7 +436,7 @@ class Worldlogic {
       const desiredA = a + Math.sign(x - a);
       const desiredB = b + Math.sign(y - b);
 
-      const climb = climbable(world.rows, world.cols, world.tiles, a, b, world, this);
+      const climb = climbable(world.rows, world.cols, world.tiles, a, b, world, CHUNK_SIZE);
 
       const swapResOne = swapTiles(world.rows, world.cols, world.tiles, a, b, desiredA, desiredB, WALK_MASK);
       if (swapResOne.changed) {
@@ -417,7 +459,7 @@ class Worldlogic {
     // however, this means we have to check that its not been consumed yet
     if (
       checkTile(x, y, ["TRAIL"], world.rows, world.cols, world.tiles) && // check not consumed
-      this._touching(world, x, y, ["AIR", "TRAIL"]) < 8
+      touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["AIR", "TRAIL"]) < 8
     ) {
       const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "AIR");
       world.tiles = tileSet.tiles;
@@ -426,51 +468,4 @@ class Worldlogic {
     return result;
   }
 
-  /**
-   * Returns the number of tiles matching the mask that are in reach
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {string[]} mask - tile types to check for
-   * @param {number} radius - radius to check (1 means only adjacent tiles)
-   * @returns {boolean} the number of matching tiles in reach
-   */
-  _touching(world, x, y, mask, radius = 1) {
-    return touchingWhich(
-      world.rows,
-      world.cols,
-      world.tiles,
-      world.chunks,
-      CHUNK_SIZE,
-      x,
-      y,
-      mask,
-      radius,
-    ).length;
-  }
-
-  /**
-   * Sets one random tile matching the mask that is in reach to the given tile
-   * @param {number} x - x coordinate
-   * @param {number} y - y coordinate
-   * @param {string} tile - tile type to set
-   * @param {string[]} mask - tile types allowed to be replaced
-   * @returns {boolean} whether a tile was replaced
-   */
-  _setOneTouching(world, x, y, tile, mask) {
-    const targets = touchingWhich(world, x, y, mask);
-    if (targets.length) {
-      const target = targets[randomIntInclusive(0, targets.length - 1)];
-      const tileSet = setTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        target.a,
-        target.b,
-        tile,
-      );
-      world.tiles = tileSet.tiles;
-      return tileSet.change;
-    }
-    return false;
-  }
 }
