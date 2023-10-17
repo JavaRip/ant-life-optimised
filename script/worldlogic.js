@@ -53,7 +53,7 @@ class Worldlogic {
         }
         return sandUpdate.change;
       case 'CORPSE':
-        const corpseUpdate = corpseAction(world.rows, world.cols, world.tiles, x, y);
+        const corpseUpdate = corpseAction(world.rows, world.cols, world.chunks, CHUNK_SIZE, world.tiles, x, y);
         if (corpseUpdate.change) {
           world.tiles = corpseUpdate.tiles;
         }
@@ -138,7 +138,26 @@ class Worldlogic {
 
         return workerUpdate.change;
       case 'PEST':
-        return this._pestAction(world, x, y);
+        const pestUpdate = pestAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          CHUNK_SIZE,
+          PEST_TARGET_MASK,
+          PEST_SEEK_PROB,
+          PEST_RANGE,
+          WALK_MASK,
+          ROAM_MASK,
+          x,
+          y,
+        );
+
+        if (pestUpdate.change) {
+          world.tiles = pestUpdate.tiles;
+        }
+
+        return pestUpdate.change;
       case 'EGG':
         return this._eggAction(world, x, y);
       case 'TRAIL':
@@ -146,63 +165,6 @@ class Worldlogic {
       default:
         return false;
     }
-  }
-
-  /**
-   * Performs the action for a PEST tile
-   * PESTS kill adjacent WORKER, QUEEN, and EGG tiles, seek out targets, or fly around randomly.
-   * PESTS can be killed by adjacent WORKER tiles but usually win a 1-on-1 fight.
-   */
-  _pestAction(world, x, y) {
-    // Destroyed by workers
-    if (Math.random() <= KILL_PROB * touching(world.rows, world.cols, world.tiles, world.chunks, CHUNK_SIZE, x, y, ["WORKER"])) {
-      const tileSet = setTile(world.rows, world.cols, world.tiles, x, y, "CORPSE");
-      world.tiles = tileSet.tiles
-      return tileSet.change
-    }
-
-    // Fight workers, queens, eggs
-    // Note: this is asymmetric so groups of workers fight better than pests.
-    // Pests are hit by all neighbouring workers but only hit one worker per tick.
-    // But pests have a higher base attack chance so typically win 1 on 1.
-    if (Math.random() <= KILL_PROB * 2) {
-      if (setOneTouching(
-        world.rows,
-        world.cols,
-        world.tiles,
-        world.chunks,
-        CHUNK_SIZE,
-        x,
-        y,
-        "CORPSE",
-        PEST_TARGET_MASK,
-      )) {
-        return true;
-      }
-    }
-
-    // Chance to seek out targets
-    // Note: low chance allows going around obstacles and also reduces lag
-    if (
-      Math.random() < PEST_SEEK_PROB &&
-      searchForTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        world.chunks,
-        world.chunkSize,
-        x,
-        y,
-        PEST_TARGET_MASK,
-        PEST_RANGE,
-        WALK_MASK,
-      )
-    ) {
-      return true;
-    }
-    // move randomly
-    // Note: random movement uses a reduced tileset to avoid helping farm
-    return moveRandom(world.rows, world.cols, world.tiles, x, y, ROAM_MASK);
   }
 
   /**

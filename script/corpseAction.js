@@ -2,9 +2,9 @@
  * Performs the action for a CORPSE tile
  * CORPSE falls down and to the side and has a chance to be converted by adjacent PLANT tiles
  */
-function corpseAction(rows, cols, tiles, convertProb, x, y) {
+function corpseAction(rows, cols, chunks, chunkSize, tiles, convertProb, x, y) {
   // when touching plant, convert to plant
-  if (Math.random() <= convertProb * this._touching(world, x, y, ["PLANT"])) {
+  if (Math.random() <= convertProb * touching(rows, cols, tiles, chunks, chunkSize, x, y, ["PLANT"])) {
     // return { tiles, change } and set world state in calling function
     return setTile(rows, cols, tiles, x, y, "PLANT");
   }
