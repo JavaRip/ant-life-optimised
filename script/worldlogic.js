@@ -81,7 +81,23 @@ class Worldlogic {
         }
         return plantUpdate.change;
       case 'FUNGUS':
-        return this._fungusAction(world, x, y);
+        const fungusUpdate = fungusAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          world.surfaceY,
+          CHUNK_SIZE,
+          CONVERT_PROB,
+          x,
+          y,
+        );
+
+        if (fungusUpdate.change) {
+          world.tiles = fungusUpdate.tiles;
+        }
+        return fungusUpdate.change;
+
       case 'QUEEN':
         return this._queenAction(world, x, y);
       case 'WORKER':
@@ -97,51 +113,6 @@ class Worldlogic {
     }
   }
 
-  /**
-   * Performs the action for a FUNGUS tile
-   * FUNGUS falls down and has a chance to convert to adjacent PLANT tiles if underground
-   */
-  _fungusAction(world, x, y) {
-    // // Destroyed by air
-    // if (Math.random() <= KILL_PROB && this._exposedToSky(x, y)) {
-    //   return world.setTile(x, y, "SAND");
-    // }
-
-    // when unsupported, move down
-    if (
-      checkTile(x, y - 1, ["AIR", "WATER"], world.rows, world.cols, world.tiles) &&
-      touching(world.rows, world.cols, world.chunks, CHUNK_SIZE, x, y, ["FUNGUS", "PLANT"]) < 2
-    ) {
-      return swapTiles(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x,
-        y,
-        x,
-        y - 1,
-      );
-    }
-
-    // When underground and touching plant, convert to fungus
-    if (y < world.surfaceY && Math.random() <= CONVERT_PROB) {
-      if (setOneTouching(
-        world.rows,
-        world.cols,
-        world.tiles,
-        world.chunks,
-        CHUNK_SIZE,
-        x,
-        y,
-        "FUNGUS",
-        ["PLANT"],
-      )) {
-        return true;
-      }
-    }
-
-    return;
-  }
 
   /**
    * Performs the action for a QUEEN tile

@@ -31,5 +31,5 @@ function setOneTouching(rows, cols, tiles, chunks, chunkSize, x, y, tile, mask) 
 
     return tileSet;
   }
-  return { tiles: tiles, change: false }
+  return { tiles: tiles, change: false };
 }
