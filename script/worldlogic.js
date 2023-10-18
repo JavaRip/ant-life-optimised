@@ -65,12 +65,12 @@ class Worldlogic {
         ) *
           world.cols) /
         100;
-      this.doRain(world, rainCount);
+      doRain(world.rows, world.cols, world.tiles, rainCount);
     } // Pests (never at same time as rain)
     else if (world.age >= PEST_START && world.age % PEST_FREQ === 0) {
       world.tiles = doRain(world.rows, world.cols, world.tiles, Math.random(), "PEST").tiles;
     }
 
-    return world.tiles;
+    return { tiles: world.tiles, age: world.age };
   }
 }
