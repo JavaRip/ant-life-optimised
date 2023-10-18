@@ -3,23 +3,21 @@
  * WATER falls down and to the side, evaporates under sky or if air to
  * left/right or near plant, and kills neighbouring creatures
  */
-function waterAction(rows, cols, tiles, x, y) {
+function waterAction(rows, cols, tiles, killProb, waterKillMask, evaporateProb, x, y) {
   // chance to kill neighbouring creatures
   if (
-    Math.random() <= KILL_PROB &&
-    setOneTouching(x, y, "CORPSE", WATER_KILL_MASK)
+    Math.random() <= killProb &&
+    setOneTouching(x, y, "CORPSE", waterKillMask)
   ) {
     return setTile(rows, cols, tiles, x, y, "AIR");
   }
 
   // chance to evaporate under sky or if air to left/right or near plant
   if (
-    Math.random() <= EVAPORATE_PROB &&
+    Math.random() <= evaporateProb &&
     (exposedToSky(rows, cols, tiles, x, y) ||
       checkTile(x - 1, y, ["AIR"], rows, cols, tiles) ||
       checkTile(x + 1, y, ["AIR"], rows, cols, tiles) ||
-
-      // TODO refactor touching before implementing this
       touching(x, y, ["PLANT"], rows, cols, tiles))
   ) {
     return setTile(rows, cols, tiles, x, y, "AIR");

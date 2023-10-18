@@ -19,21 +19,49 @@ class Worldlogic {
     }
 
     // Rain
-    if (this.age >= RAIN_FREQ && this.age % RAIN_FREQ <= RAIN_TIME) {
+    if (world.age >= RAIN_FREQ && world.age % RAIN_FREQ <= RAIN_TIME) {
       const maxRain = randomIntInclusive(1, 5);
-      const rainProgress = this.age % RAIN_FREQ;
+      const rainProgress = world.age % RAIN_FREQ;
       const rainCount =
         (Math.min(
           rainProgress ** 2 / 10000,
           maxRain,
           (RAIN_TIME - rainProgress) ** 2 / 10000,
         ) *
-          this.cols) /
+          world.cols) /
         100;
-      this.doRain(rainCount);
+      this.doRain(world, rainCount);
     } // Pests (never at same time as rain)
-    else if (this.age >= PEST_START && this.age % PEST_FREQ === 0) {
-      this.doRain(Math.random(), "PEST");
+    else if (world.age >= PEST_START && world.age % PEST_FREQ === 0) {
+      this.doRain(world, Math.random(), "PEST");
+    }
+  }
+
+
+  /**
+   * Spawn tiles at random locations on the top row
+   * @param {number} count - number of tiles to spawn
+   * @param {string} tile - tile type to spawn
+   */
+  doRain(world, count, tile = "WATER") {
+    console.log('doing rain');
+    // allow for non-int chance
+    let realCount = Math.floor(count);
+    if (Math.random() <= count % 1) {
+      realCount++;
+    }
+    for (let i = 0; i < realCount; i++) {
+      const x = randomIntInclusive(0, world.cols - 1);
+      const tileSet = setTile(
+        world.rows,
+        world.cols,
+        world.tiles,
+        x,
+        world.rows - 1,
+        tile,
+        ["AIR"],
+      );
+      world.tiles = tileSet.tiles;
     }
   }
 
@@ -63,7 +91,16 @@ class Worldlogic {
 
         return corpseUpdate.change;
       case 'WATER':
-        const waterUpdate = waterAction(world.rows, world.cols, world.tiles, x, y);
+        const waterUpdate = waterAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          KILL_PROB,
+          WATER_KILL_MASK,
+          EVAPORATE_PROB,
+          x,
+          y,
+        );
 
         if (waterUpdate.change) {
           world.tiles = waterUpdate.tiles;

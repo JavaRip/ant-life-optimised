@@ -74,31 +74,6 @@ class World {
   }
 
   /**
-   * Spawn tiles at random locations on the top row
-   * @param {number} count - number of tiles to spawn
-   * @param {string} tile - tile type to spawn
-   */
-  doRain(count, tile = "WATER") {
-    // allow for non-int chance
-    let realCount = Math.floor(count);
-    if (Math.random() <= count % 1) {
-      realCount++;
-    }
-    for (let i = 0; i < realCount; i++) {
-      const x = randomIntInclusive(0, this.cols - 1);
-      const tileSet = setTile(
-        this.rows,
-        this.cols,
-        this.tiles,
-        x,
-        this.rows - 1,
-        tile, ["AIR"],
-      );
-      world.tiles = tileSet.tiles;
-    }
-  }
-
-  /**
    * Sets all tiles within a given rectangle to a given type if they match the mask
    * @param {number} minX - minimum x coordinate
    * @param {number} minY - minimum y coordinate

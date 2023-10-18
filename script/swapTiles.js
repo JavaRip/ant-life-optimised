@@ -33,6 +33,6 @@ function swapTiles(rows, cols, tilesIn, x, y, a, b, mask = false) {
       t2,
     ).tiles;
 
-    return { tiles: tilesOut, changed: true }; // TODO return {tiles, true}
+    return { tiles: tilesOut, changed: true };
   }
 }
