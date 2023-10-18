@@ -14,7 +14,35 @@ class Worldlogic {
     for (let y = 0; y < world.rows; y++) {
       for (let x = 0; x < world.cols; x++) {
         const dx = bias ? x : world.cols - 1 - x;
-        this._doTileAction(world, dx, y);
+        doTileAction(
+          world.rows,
+          world.cols,
+          world.tiles,
+          world.chunks,
+          CHUNK_SIZE,
+          KILL_PROB,
+          EVAPORATE_PROB,
+          GROW_PROB,
+          EGG_LAY_PROB,
+          CONVERT_PROB,
+          PEST_SEEK_PROB,
+          EGG_HATCH_PROB,
+          EGG_QUEEN_PROB,
+          WATER_KILL_MASK,
+          PLANT_GROW_MASK,
+          WALK_MASK,
+          PUSH_MASK,
+          PEST_TARGET_MASK,
+          ROAM_MASK,
+          QUEEN_SPEED,
+          QUEEN_RANGE,
+          PEST_RANGE,
+          WORKER_RANGE,
+          QUEEN_FUNGUS_MIN,
+          world.surfaceY,
+          dx,
+          y,
+        );
       }
     }
 
@@ -62,177 +90,6 @@ class Worldlogic {
         ["AIR"],
       );
       world.tiles = tileSet.tiles;
-    }
-  }
-
-  /**
-   * Perform the action for a tile if it has one
-   * @param {number} x - X coordinate of tile
-   * @param {number} y - Y coordinate of tile
-   * @returns {boolean} - Whether the tile performed an action
-   */
-  _doTileAction(world, x, y) {
-    const tile = getTile(x, y, world.tiles);
-    switch (tile) {
-      case 'SAND':
-        const sandUpdate = sandAction(world.rows, world.cols, world.tiles, x, y);
-
-        if (sandUpdate.change) {
-          world.tiles = sandUpdate.tiles;
-        }
-
-        return sandUpdate.change;
-      case 'CORPSE':
-        const corpseUpdate = corpseAction(world.rows, world.cols, world.chunks, CHUNK_SIZE, world.tiles, x, y);
-
-        if (corpseUpdate.change) {
-          world.tiles = corpseUpdate.tiles;
-        }
-
-        return corpseUpdate.change;
-      case 'WATER':
-        const waterUpdate = waterAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          KILL_PROB,
-          WATER_KILL_MASK,
-          EVAPORATE_PROB,
-          x,
-          y,
-        );
-
-        if (waterUpdate.change) {
-          world.tiles = waterUpdate.tiles;
-        }
-
-        return waterUpdate.change;
-      case 'PLANT':
-        const plantUpdate = plantAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          world.chunks,
-          CHUNK_SIZE,
-          GROW_PROB,
-          PLANT_GROW_MASK,
-          x,
-          y,
-        );
-
-        if (plantUpdate.change) {
-          world.tiles = plantUpdate.tiles;
-        }
-
-        return plantUpdate.change;
-      case 'FUNGUS':
-        const fungusUpdate = fungusAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          world.chunks,
-          world.surfaceY,
-          CHUNK_SIZE,
-          CONVERT_PROB,
-          x,
-          y,
-        );
-
-        if (fungusUpdate.change) {
-          world.tiles = fungusUpdate.tiles;
-        }
-
-        return fungusUpdate.change;
-      case 'QUEEN':
-        const queenUpdate = queenAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          world.chunks,
-          CHUNK_SIZE,
-          QUEEN_SPEED,
-          QUEEN_RANGE,
-          QUEEN_FUNGUS_MIN,
-          WALK_MASK,
-          EGG_LAY_PROB,
-          x,
-          y,
-        );
-
-        if (queenUpdate.change) {
-          world.tiles = queenUpdate.tiles;
-        }
-
-        return queenUpdate.change;
-      case 'WORKER':
-        const workerUpdate = workerAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          world.chunks,
-          CHUNK_SIZE,
-          WALK_MASK,
-          PUSH_MASK,
-          x,
-          y,
-        );
-
-        if (workerUpdate.change) {
-          world.tiles = workerUpdate.tiles;
-        }
-
-        return workerUpdate.change;
-      case 'PEST':
-        const pestUpdate = pestAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          world.chunks,
-          CHUNK_SIZE,
-          PEST_TARGET_MASK,
-          PEST_SEEK_PROB,
-          PEST_RANGE,
-          WALK_MASK,
-          ROAM_MASK,
-          x,
-          y,
-        );
-
-        if (pestUpdate.change) {
-          world.tiles = pestUpdate.tiles;
-        }
-
-        return pestUpdate.change;
-      case 'EGG':
-        return eggAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          EGG_HATCH_PROB,
-          EGG_QUEEN_PROB,
-          x,
-          y,
-        );
-      case 'TRAIL':
-        const trailUpdate = trailAction(
-          world.rows,
-          world.cols,
-          world.tiles,
-          world.chunks,
-          CHUNK_SIZE,
-          WORKER_RANGE,
-          WALK_MASK,
-          x,
-          y,
-        );
-
-        if (trailUpdate.changed) {
-          world.tiles = trailUpdate.tiles;
-        }
-
-        return trailUpdate.changed;
-      default:
-        return false;
     }
   }
 }
