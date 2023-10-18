@@ -46,6 +46,8 @@ function doTileAction(
         rows,
         cols,
         tiles,
+        chunks,
+        chunkSize,
         killProb,
         waterKillMask,
         evaporateProb,
