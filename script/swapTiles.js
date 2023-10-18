@@ -7,18 +7,17 @@
  * @param {string[]} mask - allowed type of second tile
  * @returns {boolean} - whether the tiles were swapped
  */
-function swapTiles(rows, cols, tilesIn, x, y, a, b, mask = false) {
-  const tiles = [...tilesIn];
-  if (!checkTile(a, b, mask, rows, cols, tilesIn)) {
+function swapTiles(rows, cols, tiles, x, y, a, b, mask = false) {
+  if (!checkTile(a, b, mask, rows, cols, tiles)) {
     return { tiles: tiles, changed: false };
   } else {
-    const t1 = getTile(x, y, tilesIn);
-    const t2 = getTile(a, b, tilesIn);
+    const t1 = getTile(x, y, tiles);
+    const t2 = getTile(a, b, tiles);
 
     const tilesOne = setTile(
       rows,
       cols,
-      tilesIn,
+      tiles,
       a,
       b,
       t1,

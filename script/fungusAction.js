@@ -2,8 +2,7 @@
  * Performs the action for a FUNGUS tile
  * FUNGUS falls down and has a chance to convert to adjacent PLANT tiles if underground
  */
-function fungusAction(rows, cols, tilesIn, chunks, surfaceY, chunkSize, convertProb, x, y) {
-  const tiles = [...tilesIn];
+function fungusAction(rows, cols, tiles, chunks, surfaceY, chunkSize, convertProb, x, y) {
   // // Destroyed by air
   // if (Math.random() <= KILL_PROB && this._exposedToSky(x, y)) {
   //   return world.setTile(x, y, "SAND");

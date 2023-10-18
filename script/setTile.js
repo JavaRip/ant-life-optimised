@@ -7,8 +7,7 @@
  * @param {string[]} mask - tile types that are allowed to be replaced
  * @returns {boolean} - whether the tile was set
  */
-function setTile(rows, cols, tilesIn, x, y, tile, mask = false) {
-  const tiles = [...tilesIn];
+function setTile(rows, cols, tiles, x, y, tile, mask = false) {
   if (!checkTile(x, y, mask, rows, cols, tiles)) {
     return { tiles: tiles, change: false };
   } else {

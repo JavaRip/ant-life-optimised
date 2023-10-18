@@ -11,7 +11,7 @@
 function searchForTile(
     rows,
     cols,
-    tilesIn,
+    tiles,
     chunks,
     chunkSize,
     x,
@@ -20,7 +20,6 @@ function searchForTile(
     radius,
     walkableMask = ["AIR"]
   ) {
-  const tiles = [...tilesIn];
   // If no chunks in range contain target, skip searching
   if (!checkChunks(rows, cols, chunkSize, chunks, x, y, targetMask, radius)) {
     return false;

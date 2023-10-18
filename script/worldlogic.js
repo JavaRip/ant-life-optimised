@@ -4,7 +4,14 @@ class Worldlogic {
    * Run the simulation for a single step
    */
   tick(world) {
-    world.chunks = updateChunks(world.rows, world.cols, TILESET, CHUNK_SIZE, world.tiles, world);
+    world.chunks = updateChunks(
+      world.rows,
+      world.cols,
+      TILESET,
+      CHUNK_SIZE,
+      world.tiles,
+      world,
+    );
 
     // Tile actions
     world.age += 1;
@@ -14,7 +21,7 @@ class Worldlogic {
     for (let y = 0; y < world.rows; y++) {
       for (let x = 0; x < world.cols; x++) {
         const dx = bias ? x : world.cols - 1 - x;
-        doTileAction(
+        world.tiles = doTileAction(
           world.rows,
           world.cols,
           world.tiles,
@@ -42,7 +49,7 @@ class Worldlogic {
           world.surfaceY,
           dx,
           y,
-        );
+        ).tiles;
       }
     }
 
@@ -61,35 +68,9 @@ class Worldlogic {
       this.doRain(world, rainCount);
     } // Pests (never at same time as rain)
     else if (world.age >= PEST_START && world.age % PEST_FREQ === 0) {
-      this.doRain(world, Math.random(), "PEST");
+      world.tiles = doRain(world.rows, world.cols, world.tiles, Math.random(), "PEST").tiles;
     }
-  }
 
-
-  /**
-   * Spawn tiles at random locations on the top row
-   * @param {number} count - number of tiles to spawn
-   * @param {string} tile - tile type to spawn
-   */
-  doRain(world, count, tile = "WATER") {
-    console.log('doing rain');
-    // allow for non-int chance
-    let realCount = Math.floor(count);
-    if (Math.random() <= count % 1) {
-      realCount++;
-    }
-    for (let i = 0; i < realCount; i++) {
-      const x = randomIntInclusive(0, world.cols - 1);
-      const tileSet = setTile(
-        world.rows,
-        world.cols,
-        world.tiles,
-        x,
-        world.rows - 1,
-        tile,
-        ["AIR"],
-      );
-      world.tiles = tileSet.tiles;
-    }
+    return world.tiles;
   }
 }

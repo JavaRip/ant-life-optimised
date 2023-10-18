@@ -57,5 +57,5 @@ function queenAction(rows, cols, tiles, chunks, chunkSize, queenSpeed, queenRang
       return mrRes;
     }
   }
-  return false;
+  return { tiles: tiles, changed: false };
 }

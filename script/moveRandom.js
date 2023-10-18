@@ -7,8 +7,7 @@
  * @param {boolean} pushMask - tile types that can be pushed
  * @returns {boolean} whether tiles were swapped
  */
-function moveRandom(rows, cols, tilesIn, x, y, mask, pushMask = false) {
-  const tiles = [...tilesIn];
+function moveRandom(rows, cols, tiles, x, y, mask, pushMask = false) {
   // determine direction
   const dx = randomIntInclusive(-1, 1);
   const dy = randomIntInclusive(-1, 1);

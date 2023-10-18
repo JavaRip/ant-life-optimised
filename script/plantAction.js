@@ -3,8 +3,7 @@
  * PLANT falls down when unsupported by adjacent PLANT tiles and has a chance to grow
  * Growth is less likely when touching other PLANT or FUNGUS tiles so they form narrow stems
  */
-function plantAction(rows, cols, tilesIn, chunks, chunkSize, growProb, plantGrowMask, x, y) {
-  let tiles = [...tilesIn]
+function plantAction(rows, cols, tiles, chunks, chunkSize, growProb, plantGrowMask, x, y) {
   // when unsupported, move down
   if (
     checkTile(x, y - 1, ["AIR", "WATER"], rows, cols, tiles) &&

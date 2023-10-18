@@ -142,7 +142,9 @@ function gameLoop(loop = false) {
   // world tick rate can be <= frame rate
   if (start - LAST_TICK_TIME >= 1000 / TPS) {
     LAST_TICK_TIME = start;
-    WORLDLOGIC.tick(WORLD);
+    WORLD.tiles = WORLDLOGIC.tick(
+      JSON.parse(JSON.stringify(WORLD))
+    );
 
     if (DEBUG) {
       const elapsed = performance.now() - start;
