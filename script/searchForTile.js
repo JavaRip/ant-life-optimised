@@ -22,7 +22,7 @@ function searchForTile(
   ) {
   // If no chunks in range contain target, skip searching
   if (!checkChunks(rows, cols, chunkSize, chunks, x, y, targetMask, radius)) {
-    return false;
+    return { tiles: tiles, changed: false };
   }
 
   for (let r = 1; r <= radius; r++) {

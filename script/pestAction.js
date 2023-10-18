@@ -48,7 +48,7 @@ function pestAction(rows, cols, tiles, chunks, chunkSize, pestTargetMask, pestSe
       walkMask,
     )
   ) {
-    return true;
+    return { tiles: tiles, changed: true };
   }
   // move randomly
   // Note: random movement uses a reduced tileset to avoid helping farm

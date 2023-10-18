@@ -40,7 +40,7 @@ function doTileAction(
 
       return sandUpdate;
     case 'CORPSE':
-      return corpseAction(rows, cols, chunks, chunkSize, tiles, x, y);
+      return corpseAction(rows, cols, chunks, chunkSize, tiles, convertProb, x, y);
     case 'WATER':
       return waterAction(
         rows,
