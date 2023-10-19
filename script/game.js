@@ -13,11 +13,14 @@ let LAST_ANT_COUNT = 1;
 // WASM functions
 let WASM;
 let GREET;
+let legalWasm;
 
 $(document).ready(async function () {
-  const { default: initWasm, greet } = await import('../pkg/ant_life_optimised.js');
+  const { default: initWasm, greet, legal } = await import('../pkg/ant_life_optimised.js');
   WASM = await initWasm();
   GREET = greet;
+  legalWasm = legal
+
 
   initGame();
   setupControls();

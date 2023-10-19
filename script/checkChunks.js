@@ -8,7 +8,7 @@
  * @returns {boolean} - whether the chunks contain the required number of tiles
  */
 function checkChunks(rows, cols, chunkSize, chunks, x, y, mask, distance = 0, threshold = 1) {
-  if (!legal(x, y, rows, cols)) return false;
+  if (!legalWasm(x, y, rows, cols)) return false;
   if (!mask) return true;
   if (!threshold) return true;
   const gotChunks = getChunks(chunkSize, chunks, x, y, distance);

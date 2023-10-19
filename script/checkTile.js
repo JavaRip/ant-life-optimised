@@ -6,7 +6,7 @@
  * @returns {boolean} - whether the tile is legal and allowed by the mask
  */
 function checkTile(x, y, mask, rows, cols, tiles) {
-  if (!legal(x, y, rows, cols)) return false;
+  if (!legalWasm(x, y, rows, cols)) return false;
   if (!mask) return true;
   return mask.includes(getTile(x, y, tiles));
 }
