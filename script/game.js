@@ -121,7 +121,6 @@ function init() {
   $("#score").text("");
   WORLD = new World();
   WORLDGENERATOR = new Worldgen();
-  WORLDLOGIC = new Worldlogic();
   WORLD = WORLDGENERATOR.generate({}, WORLD);
   RENDERER = new Renderer(
     document.getElementById("map"),
@@ -142,7 +141,7 @@ function gameLoop(loop = false) {
   // world tick rate can be <= frame rate
   if (start - LAST_TICK_TIME >= 1000 / TPS) {
     LAST_TICK_TIME = start;
-    const nextWorld = WORLDLOGIC.tick(
+    const nextWorld = tick(
       JSON.parse(JSON.stringify(WORLD))
     );
 
