@@ -16,11 +16,10 @@ let GREET;
 let legalWasm;
 
 $(document).ready(async function () {
-  const { default: initWasm, greet, legal } = await import('../pkg/ant_life_optimised.js');
+  const { default: initWasm, greet, legal, get_tile } = await import('../pkg/ant_life_optimised.js');
   WASM = await initWasm();
   GREET = greet;
   legalWasm = legal
-
 
   initGame();
   setupControls();
@@ -164,6 +163,7 @@ function gameLoop(loop = false) {
       console.log(`Tick ${WORLD.age} completed in ${elapsed}ms`);
     }
   }
+
 
   doInput(false);
   RENDERER.draw();
