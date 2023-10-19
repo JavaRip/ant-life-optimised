@@ -1,9 +1,4 @@
-import init, { greet } from '../pkg/ant_life_optimised.js';
-
-async function main() {
-    await init();
-    const result = await greet('I got here from javascript!');
-    console.log(result);
+async function greetJs(input) {
+    console.log(`input: ${input}, type: ${typeof input}`);
+    console.log(await GREET(input));
 }
-
-main();

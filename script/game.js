@@ -10,8 +10,16 @@ let BRUSH_X;
 let BRUSH_Y;
 let LAST_ANT_COUNT = 1;
 
-$(document).ready(function () {
-  init();
+// WASM functions
+let WASM;
+let GREET;
+
+$(document).ready(async function () {
+  const { default: initWasm, greet } = await import('../pkg/ant_life_optimised.js');
+  WASM = await initWasm();
+  GREET = greet;
+
+  initGame();
   setupControls();
   if (!START_PAUSED) {
     $("#btn-pause").trigger("click");
@@ -65,7 +73,7 @@ function setupControls() {
   });
 
   $("#btn-reset").on("click", function () {
-    init();
+    initGame();
     if (START_PAUSED && FRAME_TIMER) {
       cancelAnimationFrame(FRAME_TIMER);
       FRAME_TIMER = null;
@@ -116,7 +124,7 @@ function _setBrushMask() {
   }
 }
 
-function init() {
+function initGame() {
   if (DEBUG) console.log("Loading...");
   $("#score").text("");
   WORLD = new World();
