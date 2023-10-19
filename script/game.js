@@ -15,6 +15,7 @@ let WASM;
 let GREET;
 let legalWasm;
 let pointWithinRadiusWasm;
+let randomIntInclusive;
 
 $(document).ready(async function () {
   const {
@@ -22,11 +23,13 @@ $(document).ready(async function () {
     greet,
     legal,
     point_within_radius,
+    random_int_inclusive,
   } = await import('../pkg/ant_life_optimised.js');
   WASM = await initWasm();
   GREET = greet;
   legalWasm = legal;
   pointWithinRadiusWasm = point_within_radius;
+  randomIntInclusive = random_int_inclusive;
 
   initGame();
   setupControls();

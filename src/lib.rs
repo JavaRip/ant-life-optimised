@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
+use rand::prelude::*;
 use web_sys::console;
 
 #[wasm_bindgen]
@@ -20,7 +21,15 @@ pub fn legal(x: i32, y: i32, rows: i32, cols: i32) -> bool {
 
 #[wasm_bindgen]
 pub fn point_within_radius(a: i32, b: i32, x: i32, y: i32, r: i32) -> bool {
-  let dist = (a - x) * (a - x) + (b - y) * (b - y);
-  dist < r * r
+    let dist = (a - x) * (a - x) + (b - y) * (b - y);
+    dist < r * r
+}
+
+#[wasm_bindgen]
+pub fn random_int_inclusive(min: f64, max: f64) -> i32 {
+    let min = min.floor();
+    let max = max.ceil();
+    let rand: f64 = rand::thread_rng().gen();
+    (rand * (max - min + 1.0) + min).floor() as i32
 }
 
