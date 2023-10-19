@@ -17,3 +17,10 @@ pub fn greet(name: JsValue) {
 pub fn legal(x: i32, y: i32, rows: i32, cols: i32) -> bool {
     x >= 0 && y >= 0 && x < cols && y < rows
 }
+
+#[wasm_bindgen]
+pub fn point_within_radius(a: i32, b: i32, x: i32, y: i32, r: i32) -> bool {
+  let dist = (a - x) * (a - x) + (b - y) * (b - y);
+  dist < r * r
+}
+

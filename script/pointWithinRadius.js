@@ -7,7 +7,7 @@
  * @param {number} r - Radius
  * @returns {boolean} - Whether the first point is within the given radius of the second point
  */
-function pointWithinRadius(a, b, x, y, r) {
+function pointWithinRadiusWasm(a, b, x, y, r) {
   var dist = (a - x) * (a - x) + (b - y) * (b - y);
   return dist < r * r;
 }

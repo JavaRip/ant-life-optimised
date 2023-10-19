@@ -14,12 +14,19 @@ let LAST_ANT_COUNT = 1;
 let WASM;
 let GREET;
 let legalWasm;
+let pointWithinRadiusWasm;
 
 $(document).ready(async function () {
-  const { default: initWasm, greet, legal, get_tile } = await import('../pkg/ant_life_optimised.js');
+  const {
+    default: initWasm,
+    greet,
+    legal,
+    point_within_radius,
+  } = await import('../pkg/ant_life_optimised.js');
   WASM = await initWasm();
   GREET = greet;
-  legalWasm = legal
+  legalWasm = legal;
+  pointWithinRadiusWasm = point_within_radius;
 
   initGame();
   setupControls();

@@ -18,7 +18,7 @@ function fillCircle(rows, cols, centerX, centerY, radius, tile, tiles, mask = []
       if (mask.length && !checkTile(x, y, mask, rows, cols, tiles)) {
         return;
       }
-      if (!pointWithinRadius(centerX, centerY, x, y, radius)) return;
+      if (!pointWithinRadiusWasm(centerX, centerY, x, y, radius)) return;
       const result = setTile(rows, cols, tiles, x, y, tile);
       tiles = result.tiles;
     },
