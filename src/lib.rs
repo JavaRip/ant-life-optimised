@@ -1,74 +1,10 @@
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsValue;
-use rand::prelude::*;
-use web_sys::console;
+mod chunk;
+mod tile;
+mod world;
+mod legal;
+mod point_within_radius;
+mod random_int_inclusive;
 
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet(name: JsValue) {
-    let name_str = name.as_string().unwrap_or_else(|| "unknown".to_string());
-    console::log_1(&format!("Hello, {}!", name_str).into());
-}
-
-#[wasm_bindgen]
-pub fn legal(x: i32, y: i32, rows: i32, cols: i32) -> bool {
-    x >= 0 && y >= 0 && x < cols && y < rows
-}
-
-#[wasm_bindgen]
-pub fn point_within_radius(a: i32, b: i32, x: i32, y: i32, r: i32) -> bool {
-    let dist = (a - x) * (a - x) + (b - y) * (b - y);
-    dist < r * r
-}
-
-#[wasm_bindgen]
-pub fn random_int_inclusive(min: f64, max: f64) -> i32 {
-    let min = min.floor();
-    let max = max.ceil();
-    let rand: f64 = rand::thread_rng().gen();
-    (rand * (max - min + 1.0) + min).floor() as i32
-}
-
-pub enum Tile {
-    Air,
-    Soil,
-    Sand,
-    Stone,
-    Worker,
-    Queen,
-    Egg,
-    Corpse,
-    Plant,
-    Water,
-    Fungus,
-    Pest,
-    Trail,
-}
-
-pub struct Chunk {
-    air: i32,
-    corpse: i32,
-    egg: i32,
-    fungus: i32,
-    pest: i32,
-    plant: i32,
-    queen: i32,
-    sand: i32,
-    soil: i32,
-    stone: i32,
-    trail: i32,
-    water: i32,
-    worker: i32,
-}
-
-pub struct World {
-    pub surface_y: i32,
-    pub rows: i32,
-    pub cols: i32,
-    pub chunks: Vec<Vec<Chunk>>,
-    pub tiles: Vec<Vec<Tile>>,
-}
+pub use chunk::Chunk;
+pub use tile::Tile;
+pub use world::World;

@@ -1,0 +1,15 @@
+pub enum Tile {
+    Air,
+    Soil,
+    Sand,
+    Stone,
+    Worker,
+    Queen,
+    Egg,
+    Corpse,
+    Plant,
+    Water,
+    Fungus,
+    Pest,
+    Trail,
+}

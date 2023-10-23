@@ -1,0 +1,15 @@
+pub struct Chunk {
+    air: i32,
+    corpse: i32,
+    egg: i32,
+    fungus: i32,
+    pest: i32,
+    plant: i32,
+    queen: i32,
+    sand: i32,
+    soil: i32,
+    stone: i32,
+    trail: i32,
+    water: i32,
+    worker: i32,
+}
