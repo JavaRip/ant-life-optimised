@@ -33,3 +33,42 @@ pub fn random_int_inclusive(min: f64, max: f64) -> i32 {
     (rand * (max - min + 1.0) + min).floor() as i32
 }
 
+pub enum Tile {
+    Air,
+    Soil,
+    Sand,
+    Stone,
+    Worker,
+    Queen,
+    Egg,
+    Corpse,
+    Plant,
+    Water,
+    Fungus,
+    Pest,
+    Trail,
+}
+
+pub struct Chunk {
+    air: i32,
+    corpse: i32,
+    egg: i32,
+    fungus: i32,
+    pest: i32,
+    plant: i32,
+    queen: i32,
+    sand: i32,
+    soil: i32,
+    stone: i32,
+    trail: i32,
+    water: i32,
+    worker: i32,
+}
+
+pub struct World {
+    pub surface_y: i32,
+    pub rows: i32,
+    pub cols: i32,
+    pub chunks: Vec<Vec<Chunk>>,
+    pub tiles: Vec<Vec<Tile>>,
+}
